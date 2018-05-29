@@ -29,7 +29,7 @@ $app->group('/activity/', function () {
            ->getBody()
            ->write(
             json_encode(
-                $um->Get($args['id'])
+                $am->Get($args['id'])
             )
         );
     });
@@ -57,7 +57,22 @@ $app->group('/activity/', function () {
                 $am->byUnity($args['id'])
             )
         );
-    }); 
+    });
+
+    $this->get('json/{id}/{code}', function ($req, $res, $args){ 
+      $filename = $args['id'] . '_' . $args['code'] . "_fbdata.json";
+      $path = "../../lib/media/content/activitys/" . $filename; 
+
+      $am = new ActivityModel();
+      return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $am->getJson($path)
+            )
+        );
+    });  
 
     $this->post('json/{id}', function ($req, $res, $args){
       $phpObj = json_decode(file_get_contents("php://input")); 
@@ -98,6 +113,20 @@ $app->post('/activity', function ($req, $res) {
        ->write(
         json_encode(
             $am->InsertOrUpdate(
+                $req->getParsedBody()
+            )
+        )
+    );
+});
+
+$app->post('/activity/question', function ($req, $res) { 
+    $am = new ActivityModel(); 
+    return $res
+       ->withHeader('Content-type', 'application/json')
+       ->getBody()
+       ->write(
+        json_encode(
+            $am->SaveQuestion(
                 $req->getParsedBody()
             )
         )
