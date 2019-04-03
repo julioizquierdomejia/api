@@ -180,7 +180,7 @@ class SocketHandlerTest extends TestCase
         $callback = function ($string) use ($res) {
             fclose($res);
 
-            return strlen('Hello');
+            return strlen('Hello_');
         };
 
         $this->handler->expects($this->exactly(1))

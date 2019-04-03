@@ -22,7 +22,7 @@ class StudystageModel
 		{
 			$result = array();
 
-			$stm = $this->db->prepare("SELECT * FROM $this->table");
+			$stm = $this->db->prepare("SELECT * FROM $this->table order by order_number asc");
 			$stm->execute();
             
 			$this->response->setResponse(true);
@@ -57,6 +57,27 @@ class StudystageModel
             return $this->response;
 		}  
     }
+
+    public function byCode($code)
+    {
+        try
+        {
+            $result = array();
+
+            $stm = $this->db->prepare("SELECT * FROM $this->table WHERE code = ?");
+            $stm->execute(array($code));
+
+            $this->response->setResponse(true);
+            $this->response->result = $stm->fetch();
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }  
+    } 
     
     public function InsertOrUpdate($data)
     {
@@ -65,14 +86,16 @@ class StudystageModel
             if(isset($data['id']))
             {
                 $sql = "UPDATE $this->table SET  
-                            name            = ?, 
+                            name            = ?,
+                            order_number           = ?,
                             updated         = ?
                         WHERE id = ?";
                 
                 $this->db->prepare($sql)
                      ->execute(
                         array( 
-                            $data['name'], 
+                            $data['name'],
+                            $data['order_number'], 
                             date('Y-m-d G:H:i')
                         )
                     );
@@ -80,13 +103,14 @@ class StudystageModel
             else
             {
                 $sql = "INSERT INTO $this->description
-                            (name, inserted)
-                            VALUES (?,?)";
+                            (name, order_number, inserted)
+                            VALUES (?,?,?)";
                 
                 $this->db->prepare($sql)
                      ->execute(
                         array( 
                             $data['name'], 
+                            $data['order_number'], 
                             date('Y-m-d G:H:i')
                         )
                     ); 

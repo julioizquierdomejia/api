@@ -3,6 +3,9 @@
         "slim/slim": "^3.0",
         "monolog/monolog": "^1.17",
         "slim/php-view": "^2.0", 
-        "phpmailer/phpmailer": "^6.0"
+        "phpmailer/phpmailer": "^6.0",
+		"tuupola/slim-jwt-auth": "^3.0",
+        "firebase/php-jwt": "^5.0",
+        "tuupola/base62": "^0.10.0" 
     }
-} 
+}

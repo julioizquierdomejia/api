@@ -1,4 +1,5 @@
 <?php
+
 return [
     'settings' => [
         'displayErrorDetails' => true, // set to false in production
@@ -14,5 +15,8 @@ return [
             'path' => isset($_ENV['docker']) ? 'php://stdout' : __DIR__ . '/../logs/app.log',
             'level' => \Monolog\Logger::DEBUG,
         ],
+        'jwt' => [
+            'secret' => 'r2ydeLrRPb6N59iZ6a5oaWvm'
+        ]
     ],
 ];

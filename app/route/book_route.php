@@ -34,6 +34,32 @@ $app->group('/book/', function () {
         );
     });
 
+    $this->get('registered', function ($req, $res, $args) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"];
+        $um = new BookModel($token_data);
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $um->GetRegistered()
+            )
+        );
+    });
+
+    $this->get('byCode/{code}', function ($req, $res, $args) {
+        $um = new BookModel(); 
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $um->byCode($args['code'])
+            )
+        );
+    });
+
     $this->get('byGrade/{id}', function ($req, $res, $args) {
         $um = new BookModel(); 
         return $res
@@ -42,6 +68,42 @@ $app->group('/book/', function () {
            ->write(
             json_encode(
                 $um->byGrade($args['id'])
+            )
+        );
+    });
+
+    $this->get('bySerie/{id_serie}', function ($req, $res, $args) {
+        $um = new BookModel(); 
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $um->bySerie($args['id_serie'])
+            )
+        );
+    }); 
+
+    $this->get('bySerie/orderByGrade/{id_serie}', function ($req, $res, $args) {
+        $um = new BookModel(); 
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $um->bySerie($args['id_serie'], 'id_grade')
+            )
+        );
+    });
+
+     $this->get('bySerieCS/orderByGrade/{id_serie}', function ($req, $res, $args) {
+        $um = new BookModel(); 
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $um->bySerieCS($args['id_serie'], 'id_grade, name')
             )
         );
     });

@@ -31,7 +31,19 @@ $app->group('/studystage/', function () {
             )
         );
     });
-    
+
+    $this->get('byCode/{code}', function ($req, $res, $args) {
+        $um = new StudystageModel(); 
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $um->byCode($args['code'])
+            )
+        );
+    });
+
     $this->post('save', function ($req, $res) {
         $um = new StudystageModel();
         
@@ -45,19 +57,8 @@ $app->group('/studystage/', function () {
                 )
             )
         );
-    });
-    
-    $this->post('delete/{id}', function ($req, $res, $args) {
-        $um = new StudystageModel();
-        
-        return $res
-           ->withHeader('Content-type', 'application/json')
-           ->getBody()
-           ->write(
-            json_encode(
-                $um->Delete($args['id'])
-            )
-        );
-    });
+    }); 
+ 
     
 });
+

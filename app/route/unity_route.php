@@ -34,6 +34,19 @@ $app->group('/unity/', function () {
         );
     });
 
+    $this->get('getDemo/{idbook}', function ($req, $res, $args) {
+        $um = new UnityModel();
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $um->GetDemo($args['idbook'])
+            )
+        );
+    });
+
     $this->get('byBook/{id}', function ($req, $res, $args) {
         $um = new UnityModel();
         
@@ -45,7 +58,22 @@ $app->group('/unity/', function () {
                 $um->byBook($args['id'])
             )
         );
+    });
+
+    $this->get('byNumber/{idbook}/{number}', function ($req, $res, $args) {
+        $um = new UnityModel();
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $um->byNumber($args['idbook'], $args['number'])
+            )
+        );
     }); 
+
+    
     
     $this->post('save', function ($req, $res) {
         $um = new UnityModel();

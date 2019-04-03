@@ -4,15 +4,14 @@ namespace App\Model;
 use App\Lib\Database;
 use App\Lib\Response;
 
-class AdminModel
+class AdminModel extends GeneralConfig
 {
     private $db;
-    private $table_menu = 'admin_menu';
-    private $response;
+    private $table_menu = 'admin_menu'; 
     
     public function __CONSTRUCT()
     {
-        $this->db = Database::StartUp();
+        $this->dbpe = Database::StartUpArea( $this->bd_base_pe );
         $this->response = new Response();
     }
     
@@ -22,7 +21,7 @@ class AdminModel
 		{
 			$result = array();
 
-			$stm = $this->db->prepare("SELECT * FROM $this->table_menu");
+			$stm = $this->dbpe->prepare("SELECT * FROM $this->table_menu");
 			$stm->execute();
             
 			$this->response->setResponse(true);
@@ -43,7 +42,7 @@ class AdminModel
 		{
 			$result = array();
 
-			$stm = $this->db->prepare("SELECT * FROM $this->table_menu WHERE id = ?");
+			$stm = $this->dbpe->prepare("SELECT * FROM $this->table_menu WHERE id = ?");
 			$stm->execute(array($id));
 
 			$this->response->setResponse(true);
