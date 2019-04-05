@@ -110,7 +110,38 @@ $app->group('/pe/', function () {
                 $pcn->GenerateTree($args['id_book'])
             )
         );
-    });
+    }); 
+
+    $this->get('bookgroup/getAll', function ($req, $res, $args) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
+        $pcn = new PeConfigModel($token_data);
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $pcn->GetAllBookGroup()
+            )
+        );
+    }); 
+
+    $this->get('usertype/getAll', function ($req, $res, $args) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
+        $pcn = new PeConfigModel($token_data);
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $pcn->GetAllUserType()
+            )
+        );
+    }); 
+
+    
+     
 });
 
 $app->post('/pe/resources', function ($req, $res) { 
@@ -144,5 +175,21 @@ $app->post('/pe/resources/link', function ($req, $res) {
             )
         )
     );
+});
+
+$app->post('/pe/generateBIC', function ($req, $res, $args) {
+  $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
+  $pcn = new PeConfigModel($token_data);
+
+  return $res
+     ->withHeader('Content-type', 'application/json')
+     ->getBody()
+     ->write(
+      json_encode(
+          $pcn->CreateBOOKIDCARD(
+              $req->getParsedBody()
+          )
+      )
+  );
 });
  

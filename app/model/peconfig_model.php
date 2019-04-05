@@ -11,11 +11,13 @@ class PeConfigModel extends GeneralConfig
 {
     private $db;  
     private $dbpeTemp;
+    private $dbmaster;
     
     public function __CONSTRUCT($token_data = array())
     {
         $this->db = Database::StartUp();
-        $this->dbpe = Database::StartUpPe();
+        $this->dbpe = Database::StartUpArea( $this->bd_base_pe );
+        $this->dbmaster = Database::StartUpMaster();
         $this->response = new Response();
         $this->token_data = $token_data; 
         $this->table = $this->table_book;
@@ -105,6 +107,48 @@ class PeConfigModel extends GeneralConfig
             return $this->response;
 		}
     }  
+
+    public function GetAllBookGroup()
+    {
+        try
+        {
+            $result = array();
+
+            $stm = $this->dbmaster->prepare("SELECT * FROM $this->table_book_group order by order_number");
+            $stm->execute();
+            
+            $this->response->setResponse(true);
+            $this->response->result = $stm->fetchAll();
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }
+    }
+
+    public function GetAllUserType()
+    {
+        try
+        {
+            $result = array();
+
+            $stm = $this->dbmaster->prepare("SELECT * FROM $this->table_user_master_type where public = 1");
+            $stm->execute();
+            
+            $this->response->setResponse(true);
+            $this->response->result = $stm->fetchAll();
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }
+    }
 
     public function GetResourcesByBook($id_book, $class_code)
     {
@@ -377,7 +421,126 @@ class PeConfigModel extends GeneralConfig
 		}
     }
 
+    public function CreateBOOKIDCARD($data){
+        if($data == null)
+        {
+            $this->response->setResponse(false, "Error, no data");
+            return $this->response;
+        }
+        else
+        {
+            try { 
 
+                $bookgroup_id = $data['bookgroup_id'];
+                $user_type_id = $data['user_type_id']; 
+                $quantity = $data['quantity'];
+
+                $resultBook = array(); 
+                $stm = $this->dbmaster->prepare("SELECT * FROM $this->table_book_group WHERE id = ?");
+                $stm->execute(array($bookgroup_id));
+                $resultBook = $stm->fetch();
+                $id_groups = $resultBook->id_book_links;
+                $id_groups = explode( ',', $id_groups);
+
+                $resultUserType = array();  
+                $stm = $this->dbmaster->prepare("SELECT * FROM $this->table_user_master_type WHERE id = ?");
+                $stm->execute(array($user_type_id));
+                $resultUserType = $stm->fetch();  
+                $user_type_name = $resultUserType->name;
+                $user_type_prefix = $resultUserType->prefix;
+ 
+                $codes = array();
+                for( $i=0; $i < $quantity; $i++ ){
+                    $prefix = $resultBook->prefix;
+                    $postfix = $resultBook->postfix;
+                    $id_book = $resultBook->id;
+                    $id_book_end = $id_groups[0];
+                    array_push( $codes, array( "code" => $this->GenerateBOOKIDCARD($user_type_prefix, $id_book_end, $prefix, $postfix, $id_book, $user_type_id), "user_type_name" => $user_type_name, "grade" => $postfix ) );
+                } 
+
+                
+                $this->response->result = $codes;
+                $this->response->setResponse(true);
+                return $this->response;
+            } 
+            catch (Exception $e) {
+                $this->response->setResponse(false);
+                return $this->response;
+            } 
+        } 
+    }
+
+    private function GenerateBOOKIDCARD($user_type_prefix, $id_book_group, $prefix,$postfix, $id_book, $user_type_id)
+    {
+        $code = '';
+        $id_user = $this->token_data->idm;
+        $pattern1 = 'ABCDEFGHJKLMNPQRTVWZ123456789'; 
+        $max1 = strlen($pattern1)-1; 
+
+        for($i=0;$i < $this->lengh_code_BIC;$i++) 
+            $code .= $pattern1{mt_rand(0,$max1)};
+
+        $code = $user_type_prefix . $prefix . $code . $postfix;
+  
+        $resultClass = (object)[];
+        $stm = $this->dbmaster->prepare("SELECT code FROM $this->table_book_code WHERE code = ? and id_book = ?"); 
+        $stm->execute(array($code, $id_book_group)); 
+        $resultExist = $stm->fetchAll();
+        if(count($resultExist) > 0)
+        {
+            return false;
+        }else{ 
+            $sql = "INSERT INTO $this->table_book_code
+                        (code, id_book, id_book_group, id_status, id_user, id_type, year, inserted)
+                        VALUES (?,?,?,?,?,?,?)";
+            
+            $result = $this->dbmaster->prepare($sql)
+                 ->execute(
+                    array(
+                        $code, 
+                        $id_book,
+                        $id_book_group,
+                        1,
+                        $id_user,
+                        $user_type_id,
+                        2019,
+                        date('Y-m-d G:H:i')
+                    )
+                );  
+
+            return $code; 
+        }
+
+        
+    }
+
+    public function checkCodeClass($code)
+    {
+        try
+        {
+            $resultClass = array();
+            $stm = $this->dbmaster->prepare("SELECT s.id, s.name, s.amb, cm.code_class FROM $this->table_class_master cm INNER JOIN $this->table_scholls s on cm.amb = s.amb WHERE code_class = ?"); 
+            $stm->execute(array($code));
+            $resultClass = $stm->fetchAll(); 
+            if(count($resultClass) > 0)
+            {  
+                $this->dbpeTemp = Database::StartUpArea($resultClass[0]->amb);
+                $stm = $this->dbpeTemp->prepare("SELECT c.code, c.id, u.id id_teacher, u.first_name, u.last_name, c.name, '".$resultClass[0]->name."' name_scholl, '".$resultClass[0]->amb."' code_scholl, '".$resultClass[0]->id."' id_scholl FROM $this->table_user u INNER JOIN $this->table_class c on u.id = c.id_teacher WHERE c.code = ?"); 
+                $stm->execute(array($code));  
+                $this->response->result = $stm->fetch();
+                $this->response->setResponse(true);
+            }
+            else
+            {
+                $this->response->setResponse(false);
+            }
+            return $this->response;
+        }
+        catch (Exception $e) 
+        {
+            return $this->response;
+        }
+    }
     
     
 }

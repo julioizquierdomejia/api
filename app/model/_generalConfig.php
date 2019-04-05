@@ -11,7 +11,7 @@ class GeneralConfig
 
     public $bdbase = 'basepe';
 
-    public $table_book_code = 'book_code';
+    public $table_book_code = 'book_code'; 
 
     public $table_user_master = 'user_master';
     public $table_user_master_type = 'user_master_type';
@@ -29,6 +29,7 @@ class GeneralConfig
     public $table_serie = 'book_series';
     public $table_studystage = 'studystage';
     public $table_scholls = 'scholls';
+    public $table_book_group = 'book_group_master';
 
     public $table_resources = 'resource';
     public $table_resources_type = 'resource_type';
@@ -98,6 +99,9 @@ class GeneralConfig
 	//configuracion de generacion de codigo de clase
 	public $lengh_letter_code_class = 1;
 	public $lengh_number_code_class = 4;
+
+    //configuracion de generacion de codigo BOOK ID CARD
+    public $lengh_code_BIC = 4;
 
     public function getAllAmbsUser($db, $idm)
     {

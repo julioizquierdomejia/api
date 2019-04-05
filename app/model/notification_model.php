@@ -43,6 +43,53 @@ class NotificationModel extends GeneralConfig
                 
                 foreach ($totalAmbs as $key => $value) {
                     $this->dbpeTemp = Database::StartUpArea($value->amb);
+                    $stm = $this->dbpeTemp->prepare("SELECT n.id, n.id_type, n.title, n.id_user, n.id_user_trigger, n.link, nt.name name_type, nt.link_text, '".$value->amb."' amb, date_format(n.inserted, '%e/%c/%Y a las %l:%i %p') inserted, n.inserted date_inserted,  date_format(n.inserted, '%e/%c/%Y') inserted_short, n.inserted date_inserted, DATEDIFF(now(),n.inserted) daysago  FROM $this->table n INNER JOIN $this->table_type nt on n.id_type = nt.id INNER JOIN $this->table_user u on n.id_user = u.id WHERE u.id_user_master = ? order by n.inserted desc LIMIT 0,10");
+
+                    $stm->execute(array($idm));
+                    $result = $stm->fetchAll();
+                    foreach ($result as $keyR => $valueR) {
+                        array_push($totalNotif, $valueR);
+                    }
+                }
+
+                $this->response->setResponse(true);
+                $this->response->result = $totalNotif;
+            }
+            else
+            {
+                $stm = $this->dbpe->prepare("SELECT n.id, n.id_type, n.title, n.id_user, n.id_user_trigger, n.link, nt.name name_type, nt.link_text, '".$amb."' amb FROM $this->table n INNER JOIN $this->table_type nt on n.id_type = nt.id WHERE n.id_user = ? order by n.inserted desc LIMIT 0,10");
+                $stm->execute(array($id_user));
+                
+                $this->response->setResponse(true);
+                $this->response->result = $stm->fetchAll();
+            } 
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }
+    } 
+
+    public function GetFull()
+    {
+        try
+        {
+            $result = array();
+            $id_user = $this->token_data->id;  
+            $idm = $this->token_data->idm;  
+            $amb = $this->token_data->amb;
+
+            $totalNotif = array();
+
+            if($amb == $this->bd_base_pe)
+            {
+                $totalAmbs = $this->getAllAmbsUser($this->dbmaster, $idm);
+                
+                foreach ($totalAmbs as $key => $value) {
+                    $this->dbpeTemp = Database::StartUpArea($value->amb);
                     $stm = $this->dbpeTemp->prepare("SELECT n.id, n.id_type, n.title, n.id_user, n.id_user_trigger, n.link, nt.name name_type, nt.link_text, '".$value->amb."' amb, date_format(n.inserted, '%e/%c/%Y a las %l:%i %p') inserted, n.inserted date_inserted,  date_format(n.inserted, '%e/%c/%Y') inserted_short, n.inserted date_inserted, DATEDIFF(now(),n.inserted) daysago  FROM $this->table n INNER JOIN $this->table_type nt on n.id_type = nt.id INNER JOIN $this->table_user u on n.id_user = u.id WHERE u.id_user_master = ? order by n.inserted desc");
 
                     $stm->execute(array($idm));
