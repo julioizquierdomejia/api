@@ -138,9 +138,35 @@ $app->group('/pe/', function () {
                 $pcn->GetAllUserType()
             )
         );
-    }); 
+    });  
 
-    
+    $this->get('codesBIC/get/{id_book_group}/{id_user_type}', function ($req, $res, $args) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
+        $pcn = new PeConfigModel($token_data);
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $pcn->GetCodesBIC($args['id_book_group'], $args['id_user_type'])
+            )
+        );
+    });
+
+    $this->delete('codesBIC/delete/{id_code}', function ($req, $res, $args) {
+      $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
+      $pcn = new PeConfigModel($token_data);
+
+      return $res
+         ->withHeader('Content-type', 'application/json')
+         ->getBody()
+         ->write(
+          json_encode(
+              $pcn->DeleteBIC($args['id_code'])
+          )
+      );
+    }); 
      
 });
 
@@ -177,7 +203,7 @@ $app->post('/pe/resources/link', function ($req, $res) {
     );
 });
 
-$app->post('/pe/generateBIC', function ($req, $res, $args) {
+$app->post('/pe/codesBIC/generate', function ($req, $res, $args) {
   $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
   $pcn = new PeConfigModel($token_data);
 
@@ -192,4 +218,20 @@ $app->post('/pe/generateBIC', function ($req, $res, $args) {
       )
   );
 });
- 
+
+$app->post('/pe/codesBIC/enabledchange', function ($req, $res, $args) {
+  $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
+  $pcn = new PeConfigModel($token_data);
+
+  return $res
+     ->withHeader('Content-type', 'application/json')
+     ->getBody()
+     ->write(
+      json_encode(
+          $pcn->EnabledDisabledBOOKIDCARD(
+              $req->getParsedBody()
+          )
+      )
+  );
+});
+

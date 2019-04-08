@@ -65,7 +65,14 @@ $path = [
     "/book/registered",
     "/pe/resources",
     "/pe/resources/",
-    "/pe/resources/byBook/"
+    "/pe/resources/byBook/",
+    "/pe/generateBIC",
+    "/pe/bookgroup/getAll",
+    "/pe/usertype/getAll",
+    "/pe/codesBIC/generate",
+    "/pe/codesBIC/get/",
+    "/pe/codesBIC/enabledchange",
+    "/pe/codesBIC/delete/"
 ];
 
 $app->add(new \Tuupola\Middleware\JwtAuthentication([

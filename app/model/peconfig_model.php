@@ -421,6 +421,34 @@ class PeConfigModel extends GeneralConfig
 		}
     }
 
+
+    public function GetCodesBIC($id_book_group, $id_user_type)
+    {
+        try 
+        {
+            $resultCodes = (object)[];
+            $stm = $this->dbmaster->prepare("
+                SELECT bc.id, bc.code, bc.id_book, bc.id_book_group, bc.id_status, bc.id_user, bc.id_user_join, bc.id_type, bc.year, date_activate activate, date_expired expired, 
+                date_format(bc.inserted, '%e/%c/%Y') date_inserted, date_format(bc.date_activate, '%e/%c/%Y') date_activate, date_format(bc.date_expired, '%e/%c/%Y') date_expired, bc.enabled,
+                um.email email_creator, um2.email email_joined
+                FROM $this->table_book_code bc
+                LEFT JOIN $this->table_user_master um on bc.id_user = um.id
+                LEFT JOIN $this->table_user_master um2 on bc.id_user_join = um2.id
+                WHERE bc.id_book_group = ? and bc.id_type = ?"); 
+            $stm->execute(array($id_book_group, $id_user_type)); 
+            $resultCodes = $stm->fetchAll();
+
+            $this->response->result = $resultCodes;
+            $this->response->setResponse(true);
+            return $this->response;
+        } 
+        catch (Exception $e) {
+            $this->response->setResponse(false);
+            return $this->response;
+        } 
+
+    }
+
     public function CreateBOOKIDCARD($data){
         if($data == null)
         {
@@ -470,9 +498,10 @@ class PeConfigModel extends GeneralConfig
         } 
     }
 
+
     private function GenerateBOOKIDCARD($user_type_prefix, $id_book_group, $prefix,$postfix, $id_book, $user_type_id)
     {
-        $code = '';
+        $code = ''; 
         $id_user = $this->token_data->idm;
         $pattern1 = 'ABCDEFGHJKLMNPQRTVWZ123456789'; 
         $max1 = strlen($pattern1)-1; 
@@ -492,26 +521,73 @@ class PeConfigModel extends GeneralConfig
         }else{ 
             $sql = "INSERT INTO $this->table_book_code
                         (code, id_book, id_book_group, id_status, id_user, id_type, year, inserted)
-                        VALUES (?,?,?,?,?,?,?)";
+                        VALUES (?,?,?,?,?,?,?,?)";
             
             $result = $this->dbmaster->prepare($sql)
                  ->execute(
                     array(
                         $code, 
-                        $id_book,
                         $id_book_group,
+                        $id_book,
                         1,
                         $id_user,
                         $user_type_id,
-                        2019,
+                        date('Y'),
                         date('Y-m-d G:H:i')
                     )
                 );  
 
             return $code; 
-        }
+        } 
+    }
 
-        
+    public function EnabledDisabledBOOKIDCARD($data){
+        try 
+        {
+            if(isset($data['id']) && isset($data['enabled']))
+            {
+                $sql = "UPDATE $this->table_book_code SET 
+                            enabled      = ?,
+                            updated     = ?
+                        WHERE id = ?";
+                
+                $this->dbmaster->prepare($sql)
+                     ->execute(
+                        array(
+                            $data['enabled'], 
+                            date('Y-m-d G:H:i'),
+                            $data['id']
+                        )
+                    );
+            }else{
+                $this->response->setResponse(false, 'Error, wrong Data');
+                return $this->response;
+            }
+ 
+            $this->response->setResponse(true);
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }  
+    }
+
+    public function DeleteBIC($id_code)
+    {
+        try 
+        {
+            $stm = $this->dbmaster->prepare("DELETE FROM $this->table_book_code WHERE id = ?");   
+            $stm->execute(array($id_code));
+            $this->response->setResponse(true);
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }  
     }
 
     public function checkCodeClass($code)

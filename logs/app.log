@@ -322,3 +322,4 @@
 [2019-04-04 16:10:46] api_ebl.INFO: User Login {"user":"8","sesid":"PHPSESSID=rdg70rhc4tn6i8m4gmatauh511DISENO04"} {"uid":"d8af156"}
 [2019-04-05 09:38:16] api_ebl.INFO: User Login {"user":"13","sesid":"_ga=GA1.1.1903433341.1548262052DISENO04"} {"uid":"989127c"}
 [2019-04-05 12:36:25] api_ebl.INFO: User Login {"user":"8","sesid":"_ga=GA1.1.1903433341.1548262052DISENO04"} {"uid":"7ac666e"}
+[2019-04-08 14:36:17] api_ebl.INFO: User Login {"user":"8","sesid":"DISENO04"} {"uid":"e5f4f2c"}

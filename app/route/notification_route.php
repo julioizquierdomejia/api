@@ -20,8 +20,7 @@ $app->group('/notification/', function () {
               $nm->GetAll($token_data)
           )
       ); 
-  });
-     
+  }); 
 
   $this->get('getFull', function ($req, $res, $args) {
       $token_data = $req->getAttribute("decoded_token_data")["sub"];
