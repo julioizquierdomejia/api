@@ -81,11 +81,10 @@ class ResourceModel extends GeneralConfig
 
     public function getIdBase($code){
         try
-        {
+        { 
             $this->dbpeTemp = Database::StartUpArea($this->bd_base_pe); 
             $stm = $this->dbpeTemp->prepare("SELECT id FROM $this->table where code = ?");
-            $stm->execute(array($code));
-            
+            $stm->execute(array($code)); 
             return $stm->fetch()->id; 
         }
         catch(Exception $e)

@@ -66,19 +66,16 @@ class BookModel extends GeneralConfig
     {
         try
         {
-            $resultGlobal = array("series" => array(), "studystages" => array(), "books" => array());
+            $resultGlobal = array();
             $result = array();
             $id_user_master = $this->token_data->idm;
-            $stm = $this->dbmaster->prepare("SELECT id_book, date_expired FROM $this->table_book_code WHERE id_user_join = ? and id_status = 2");
+            $stm = $this->dbmaster->prepare("SELECT id_book, id_book_group, date_expired FROM $this->table_book_code WHERE id_user_join = ? and id_status = 2");
             $stm->execute(array($id_user_master));
             $result = $stm->fetchAll();
 
             if( count($result) > 0){
                 foreach ($result as $row) { 
-                    $dataBookRel = $this->getBookDataRel($row->id_book); 
-                    array_push($resultGlobal["series"] , $dataBookRel["serie"]);
-                    array_push($resultGlobal["studystages"] , $dataBookRel["studystage"]);
-                    array_push($resultGlobal["books"] , $dataBookRel["book"]);
+                    $resultGlobal = $this->getBookDataRel($row->id_book, $row->id_book_group);
                 }
             } 
 
@@ -93,26 +90,48 @@ class BookModel extends GeneralConfig
         }  
     }
 
-    private function getBookDataRel($id_book)
+    private function getBookDataRel($id_book, $id_book_group)
     {
-        $resultBook = array(); 
-        $stm = $this->db->prepare("SELECT id, code, id_serie, name, id_type_calification FROM $this->table_book WHERE id = ?");
-        $stm->execute(array($id_book));
-        $resultBook = $stm->fetch(); 
-        $id_serie = (!$resultBook) ? '' : $resultBook->id_serie;
 
-        $resultSerie = array();  
-        $stm = $this->db->prepare("SELECT id, code, id_stage, name FROM $this->table_serie WHERE id = ?");
-        $stm->execute(array($id_serie));
-        $resultSerie = $stm->fetch();  
-        $id_studystage = (!$resultSerie) ? '' : $resultSerie->id_stage;
+        $resultBookGroup = array(); 
+        $stm = $this->dbmaster->prepare("SELECT id_book_links FROM $this->table_book_group WHERE id = ?");
+        $stm->execute(array($id_book_group));
+        $resultBookGroup = $stm->fetch(); 
+        $id_book_groups = $resultBookGroup->id_book_links; 
 
-        $resultStudyStage = array();  
-        $stm = $this->db->prepare("SELECT id, code, name FROM $this->table_studystage WHERE id = ?");
-        $stm->execute(array($id_studystage));
-        $resultStudyStage = $stm->fetch();   
- 
-        return array("serie" => $resultSerie, "studystage" => $resultStudyStage, "book" => $resultBook );
+
+        $globalData = array("series" => array(), "studystages" => array(), "books" => array()); 
+        $id_groups = explode( ',', $id_book_groups); 
+
+
+        for($i = 0; $i < count($id_groups); $i++){
+            $resultBook = array(); 
+            $stm = $this->db->prepare("SELECT id, code, id_serie, name, id_type_calification FROM $this->table_book WHERE id = ?");
+            $stm->execute(array($id_groups[$i]));
+            $resultBook = $stm->fetch(); 
+            $id_serie = (!$resultBook) ? '' : $resultBook->id_serie; 
+
+            $resultSerie = array();  
+            $stm = $this->db->prepare("SELECT id, code, id_stage, name FROM $this->table_serie WHERE id = ?");
+            $stm->execute(array($id_serie));
+            $resultSerie = $stm->fetch();  
+            $id_studystage = (!$resultSerie) ? '' : $resultSerie->id_stage;
+
+            $resultStudyStage = array();  
+            $stm = $this->db->prepare("SELECT id, code, name FROM $this->table_studystage WHERE id = ?");
+            $stm->execute(array($id_studystage));
+            $resultStudyStage = $stm->fetch();    
+            //array_push($globalData, array("serie" => $resultSerie, "studystage" => $resultStudyStage, "book" => $resultBook )); 
+            
+            array_push($globalData["books"] , $resultBook);
+            array_push($globalData["series"] , $resultSerie);
+            array_push($globalData["studystages"] , $resultStudyStage);
+        } 
+
+      
+       
+
+        return $globalData;
     }
 
     public function byCode($code)

@@ -216,7 +216,7 @@ class UserModel extends GeneralConfig
                             return $dataResponse; 
                         }else{
                             $dataBookRel = $this->getBookDataRel($row->id_book); 
-                            $dataResponse = array("aviable" => ($row->id_status == 1) ? true : false, "data" => $row, "dataExtra" => $dataBookRel ); 
+                            $dataResponse = array("aviable" => ($row->id_status == 1 && $row->enabled == 1) ? true : false, "data" => $row, "dataExtra" => $dataBookRel ); 
                             return $dataResponse; 
                         }  
                     }
