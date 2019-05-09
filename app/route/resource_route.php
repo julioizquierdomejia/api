@@ -62,8 +62,7 @@ $app->group('/resource/', function (){
                 $rm->checkResourceHistory($args['id'])
             )
         );
-    }); 
-    
+    });  
 
     $this->get('byType/{id_type}', function ($req, $res, $args) {
         $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
@@ -163,6 +162,40 @@ $app->group('/resource/', function (){
         );
     });
 
+    $this->get('teacher/byUnity/{id}/{class_code}', function ($req, $res, $args) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
+        $rm = new ResourceModel($token_data); 
+
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $rm->byUnityTeacher( 
+                  $args['id'] , 
+                  $args['class_code'] 
+                )
+            )
+        );
+    });
+
+    $this->get('alumn/byUnity/{id}/{class_code}', function ($req, $res, $args) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
+        $rm = new ResourceModel($token_data); 
+
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $rm->byUnityAlumn( 
+                  $args['id'] , 
+                  $args['class_code'] 
+                )
+            )
+        );
+    });
+
     $this->get('activity/admin/byUnity/{id}', function ($req, $res, $args) {
         $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
         $rm = new ResourceModel($token_data); 
@@ -183,7 +216,7 @@ $app->group('/resource/', function (){
 
       $id_base = ($token_data->amb != 'basepe') ? $rm->getIdBase($args['code']) : $args['id'];
 
-      $filename = $id_base . '_' . $args['code'] . "_fbdata.json";
+      $filename = $id_base . '_' . $args['code'] . "_fbdata.json"; 
       $path = "../../lib/media/pe-content/activitys/" . $filename;   
       return $res
            ->withHeader('Content-type', 'application/json')

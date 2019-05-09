@@ -114,5 +114,5 @@ class GeneralConfig
             array_push($totalAmbs, $value);
         }
         return $totalAmbs;
-    }
+    } 
 }

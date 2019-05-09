@@ -107,6 +107,20 @@ $app->group('/class/', function () {
         );
     });  
 
+    $this->get('get/alumns/byCode/{code_class}/{id_teacher}', function ($req, $res, $args) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"];
+        $cm = new TheClassModel($token_data);
+
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $cm->GetAlumnsByCode($args['code_class'], $args['id_teacher'])
+            )
+        );
+    });  
+
     $this->get('checkCode/{code_class}', function ($req, $res, $args) {
         $token_data = $req->getAttribute("decoded_token_data")["sub"];
         $cm = new TheClassModel($token_data);

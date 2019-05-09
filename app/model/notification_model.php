@@ -150,7 +150,7 @@ class NotificationModel extends GeneralConfig
             $result = array();
             $id_user = $this->token_data->id;
             $this->dbpeTemp = Database::StartUpArea($amb);
-            $stm = $this->dbpeTemp->prepare("SELECT n.id_type, n.title, n.id_user, n.id_user_trigger, n.link, nt.name name_type, nt.link_text FROM $this->table n INNER JOIN $this->table_type nt on n.id_type = nt.id WHERE n.id = ?");
+            $stm = $this->dbpeTemp->prepare("SELECT n.id, n.id_type, n.title, n.id_user, n.id_user_trigger, n.link, nt.name name_type, nt.link_text FROM $this->table n INNER JOIN $this->table_type nt on n.id_type = nt.id WHERE n.id = ?");
             $stm->execute(array($id_notification));
 
             $result = $stm->fetch();

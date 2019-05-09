@@ -10,7 +10,8 @@ $app->group('/pe/', function () {
     });
     
     $this->get('nav_private', function ($req, $res, $args) {
-        $pcn = new PeConfigModel();
+        $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
+        $pcn = new PeConfigModel($token_data);
         
         return $res
            ->withHeader('Content-type', 'application/json')

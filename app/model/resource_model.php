@@ -27,6 +27,7 @@ class ResourceModel extends GeneralConfig
     { 
         //$this->dbpe = Database::StartUpPe();
         $this->dbpe = Database::StartUpArea( isset($token_data->amb) ? $token_data->amb : $this->bd_base_pe );
+        $this->dbmaster = Database::StartUpMaster();
         $this->response = new Response();
         $this->notification = new NotificationModel($token_data);
         $this->token_data = $token_data;
@@ -81,8 +82,8 @@ class ResourceModel extends GeneralConfig
 
     public function getIdBase($code){
         try
-        { 
-            $this->dbpeTemp = Database::StartUpArea($this->bd_base_pe); 
+        {  
+            $this->dbpeTemp = Database::StartUpArea($this->bd_base_pe);  
             $stm = $this->dbpeTemp->prepare("SELECT id FROM $this->table where code = ?");
             $stm->execute(array($code)); 
             return $stm->fetch()->id; 
@@ -97,10 +98,21 @@ class ResourceModel extends GeneralConfig
     {
 		try
 		{
-			$result = array();
+			$result = array(); 
 
-			$stm = $this->dbpe->prepare("SELECT * FROM $this->table WHERE id = ?");
-			$stm->execute(array($id));
+            if( $this->token_data->amb == $this->bd_base_pe ){
+                $stm = $this->dbpe->prepare("SELECT r.id, r.code, r.name, r.description, r.id_unity, r.id_book, r.type, r.value, r.page, r.time_band, r.time, r.button_color, r.button_title, r.button_left, r.button_top, r.button_icon, r.head_img_path, r.head_style, r.url, r.text_extra, r.status, r.id_calification_type
+                    FROM $this->table r  
+                    WHERE r.id = ?");  
+                    $stm->execute(array($id));
+            }
+            else{
+                $stm = $this->dbpe->prepare("SELECT r.id, r.code, r.name, r.description, r.id_unity, r.id_book, r.type, r.value, r.page, r.time_band, r.time, r.button_color, r.button_title, r.button_left, r.button_top, r.button_icon, r.head_img_path, r.head_style, r.url, r.text_extra, r.status, r.id_calification_type, qj.score, qj.id_score_letter, qj.date_scored, qj.inserted date_resolved, IF(qj.id > 0, 1, 0) resolved, r.id_class, IF(qj.status is null, 0, qj.status) estatus_evaluate, qj.id question_id, qj.code question_code 
+                    FROM $this->table r 
+                    LEFT JOIN $this->table_question_join qj on (r.id = qj.id_resource and qj.id_resource = ?) 
+                    WHERE r.id = ?");  
+                    $stm->execute(array($id, $id));
+            }   
 
 			$this->response->setResponse(true);
             $thedata = $stm->fetch();
@@ -336,9 +348,114 @@ class ResourceModel extends GeneralConfig
             $this->response->setResponse(false, $e->getMessage());
             return $this->response;
         }  
+    } 
+
+    public function byUnityTeacher( $class_code, $id_unity )
+    {
+        try
+        {
+            $id_teacher = $this->token_data->id;
+            $amb = $this->token_data->amb;  
+            $theClass = array(); 
+            $stm = $this->dbpe->prepare("SELECT c.id, c.id_book_group FROM $this->table_class c WHERE c.code = ? and c.id_teacher = ? group by c.code"); 
+            $stm->execute(array($class_code,$id_teacher)); 
+            $theClass = $stm->fetch(); 
+            $id_class = $theClass->id; 
+            $result = array(); 
+
+            $resultBookGroup = $this->getBooksFromGroup( $theClass->id_book_group );  
+            if(count($resultBookGroup) > 0)
+            {
+                $id_book_group = $resultBookGroup[0]->id;
+                $id_groups_array = explode( ',', $resultBookGroup[0]->id_book_links); 
+                for($i = 0; $i < count($id_groups_array); $i++){ 
+                    $id_book_temp = $id_groups_array[$i];
+                    
+                     $stm = $this->dbpe->prepare("SELECT r.*, rt.id type_id, rt.name type_name, date_format(r.inserted, '%e/%c/%Y a las %l:%i %p') date_inserted, s.name name_session, s.number number_session, u.first_name, u.last_name, u.id id_user
+                                        FROM $this->table r 
+                                        INNER JOIN $this->table_type rt on r.type = rt.id 
+                                        LEFT JOIN $this->table_sessions s on r.id_session = s.id 
+                                        LEFT JOIN $this->table_user u on r.id_user = u.id 
+                                        WHERE r.id_unity = ? and r.id_class = ? and r.status = 1 order by r.page");  
+                    $stm->execute(array($id_unity, $id_class)); 
+                    $result = array_merge($result, $stm->fetchAll());
+                }           
+            }   
+
+            $this->response->setResponse(true); 
+            $this->response->result = $result; 
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }
+    } 
+
+    public function byUnityAlumn( $class_code, $id_unity )
+    {
+        try
+        {
+            $id_user = $this->token_data->id;
+            $amb = $this->token_data->amb;  
+            $theClass = array(); 
+            $stm = $this->dbpe->prepare("SELECT c.id, c.id_book_group FROM $this->table_class c INNER JOIN $this->table_user_class uc on c.code = uc.code_class WHERE c.code = ? and uc.id_user = ? group by c.code"); 
+            $stm->execute(array($class_code,$id_user)); 
+            $theClass = $stm->fetch(); 
+            $id_class = $theClass->id;
+
+
+            $result = array(); 
+
+            $resultBookGroup = $this->getBooksFromGroup( $theClass->id_book_group );  
+            if(count($resultBookGroup) > 0)
+            {
+                $id_book_group = $resultBookGroup[0]->id;
+                $id_groups_array = explode( ',', $resultBookGroup[0]->id_book_links); 
+                for($i = 0; $i < count($id_groups_array); $i++){ 
+                    $id_book_temp = $id_groups_array[$i];
+                    
+                    $stm = $this->dbpe->prepare("SELECT r.page, r.id, r.name, r.code, r.id_class, r.id_unity, r.id_book, r.type, r.id_calification_type, rt.id type_id, rt.name type_name, date_format(r.inserted, '%e/%c/%Y a las %l:%i %p') date_inserted, s.name name_session, s.number number_session, qj.status status_realized
+                                                FROM $this->table r 
+                                                INNER JOIN $this->table_type rt on r.type = rt.id 
+                                                LEFT JOIN $this->table_question_join qj on r.id = qj.id_resource and qj.id_user = ?
+                                                LEFT JOIN $this->table_sessions s on r.id_session = s.id  
+                                                WHERE r.id_unity = ? and r.id_class = ? and r.status = 1 group by r.id order by r.page"); 
+                    $stm->execute(array($id_user, $id_unity, $id_class)); 
+                    $result = array_merge($result, $stm->fetchAll());
+                }           
+            }   
+
+            $this->response->setResponse(true); 
+            $this->response->result = $result; 
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }
+    } 
+
+
+
+    private function getBooksFromGroup($id_book_group)
+    { 
+        try
+        {
+            $stm = $this->dbmaster->prepare("SELECT id, code, name, id_book_links FROM $this->table_book_group WHERE id = ?"); 
+            $stm->execute(array($id_book_group)); 
+            $resultBookGroup = $stm->fetchAll();
+            return $resultBookGroup;
+        }
+        catch(Exception $e)
+        {
+            return array();
+        }
     }
-
-
 
     public function byUnityAdminActivity($id_unity)
     {
@@ -663,7 +780,6 @@ class ResourceModel extends GeneralConfig
     }
 
     public function SaveQuestion($data){
-        //var_dump($data);
         if($data == null)
         {
             $this->response->setResponse(false, "Error, no data");
@@ -715,7 +831,8 @@ class ResourceModel extends GeneralConfig
                     if(in_array($linea["type"], $arraySaveType)){
                         $contQD++;
                         $value = ( in_array( $linea["type"], $arrayLinkType) ) ? $this->shortLink($linea["value"]) : $linea["value"];
-                        $resultQD = $this->insertQuestionDetail($idresponse, $data['activity']['id'], $id_user, $linea["type"], $linea["name"], $value, $linea["puntaje"]);
+                        $puntajeTemp = ( isset($linea["puntaje"]) ) ? $linea["puntaje"] : null;
+                        $resultQD = $this->insertQuestionDetail($idresponse, $data['activity']['id'], $id_user, $linea["type"], $linea["name"], $value, $puntajeTemp);
                         if($resultQD)
                         {
                             $contRQD++;
@@ -989,8 +1106,7 @@ class ResourceModel extends GeneralConfig
     public function GetActivityQuestion($code)
     {
         try 
-        { 
-
+        {  
             $resultHead = array();
             $id_question = intval(substr($code, 0, strpos($code, "_") ));   
             $stm = $this->dbpe->prepare("SELECT id_resource, code, id_user, code_class, times, score, id_score_letter, id_class, comment, date_format(date_scored, '%e/%c/%Y a las %l:%i %p') date_scored, date_format(inserted, '%e/%c/%Y a las %l:%i %p') date_resolved, status, id_calification_type  FROM $this->table_question_join WHERE id = ?"); 

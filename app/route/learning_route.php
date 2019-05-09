@@ -228,6 +228,20 @@ $app->group('/learning/', function () {
         );
     });  
 
+     $this->get('getAll/evaluation/pending/alumn/byClass/{code}', function ($req, $res, $args) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
+        $lm = new LearningModel($token_data); 
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $lm->GetEvaluationAlumnByClassByStatus($args['code'], 1)
+            )
+        );
+    });  
+
 
     $this->get('getAll/evaluation/pending/byClass/detail/{code}', function ($req, $res, $args) {
         $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
@@ -256,7 +270,7 @@ $app->group('/learning/', function () {
     }); 
 
 
-    $this->get('getAll/scores/byClass/{code}', function ($req, $res, $args) {
+    $this->get('getAll/scores/byClass/teacher/{code}', function ($req, $res, $args) {
         $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
         $lm = new LearningModel($token_data);
         
@@ -270,7 +284,7 @@ $app->group('/learning/', function () {
         );
     }); 
 
-    $this->get('getAll/scores/byClass/{code}/{id_unity}', function ($req, $res, $args) {
+    $this->get('getAll/scores/byClass/teacher/{code}/{id_unity}', function ($req, $res, $args) {
         $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
         $lm = new LearningModel($token_data);
         
@@ -280,6 +294,33 @@ $app->group('/learning/', function () {
            ->write(
             json_encode(
                 $lm->GetAllScoresByClassByUnity($args['code'], $args['id_unity'])
+            )
+        );
+    }); 
+
+    $this->get('getAll/scores/byClass/alumn/{code}', function ($req, $res, $args) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
+        $lm = new LearningModel($token_data); 
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $lm->GetAllScoresByClassAlumn($args['code'])
+            )
+        );
+    });  
+
+    $this->get('getAll/scores/byClass/alumn/{code}/{id_unity}', function ($req, $res, $args) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
+        $lm = new LearningModel($token_data);
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $lm->GetAllScoresByClassAlumnByUnity($args['code'], $args['id_unity'])
             )
         );
     }); 

@@ -135,6 +135,55 @@ class UserModel extends GeneralConfig
             return $this->response;
         }
     } 
+            
+    public function GetExtraInfo(){
+        try
+        {
+            $id_user = $this->token_data->id;
+            $result = array(); 
+
+            $stm = $this->dbpe->prepare("SELECT if( tutorialClass is null, 0, tutorialClass) tutorialClass, id_type FROM $this->table where id = ?");
+            $stm->execute(array($id_user));
+            
+            $this->response->setResponse(true);
+            $this->response->result = $stm->fetch();
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }
+    }
+
+    public function UpdateField($data){ 
+        try
+        {
+            $id_user = $this->token_data->id;
+            $sql = "UPDATE $this->table SET 
+                            ".$data["field"]." = ?, 
+                            updated = ?
+                        WHERE id = ?";  
+                    
+            $sent = $this->dbpe->prepare($sql) 
+                         ->execute(
+                            array( 
+                                $data["value"],
+                                date('Y-m-d G:H:i'),
+                                $id_user
+                            )
+                        ); 
+            
+            $this->response->setResponse(true);  
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }
+    }
 
     public function register($data)
     { 

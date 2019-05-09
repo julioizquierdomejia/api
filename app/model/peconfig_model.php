@@ -16,7 +16,7 @@ class PeConfigModel extends GeneralConfig
     public function __CONSTRUCT($token_data = array())
     {
         $this->db = Database::StartUp();
-        $this->dbpe = Database::StartUpArea( $this->bd_base_pe );
+        $this->dbpe = Database::StartUpArea( isset($token_data->amb) ? $token_data->amb : $this->bd_base_pe );
         $this->dbmaster = Database::StartUpMaster();
         $this->response = new Response();
         $this->token_data = $token_data; 
@@ -70,8 +70,7 @@ class PeConfigModel extends GeneralConfig
     {
 		try
 		{
-			$result = array();
-
+			$result = array();    
 			$stm = $this->dbpe->prepare("SELECT * FROM $this->table_nav_private order by order_number");
 			$stm->execute();
             

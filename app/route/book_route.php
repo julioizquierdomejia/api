@@ -46,6 +46,20 @@ $app->group('/book/', function () {
                 $um->GetRegistered()
             )
         );
+    }); 
+
+    $this->get('checkCode/{code}', function ($req, $res, $args) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"];
+        $um = new BookModel($token_data);
+
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $um->CheckCode($args['code'])
+            )
+        );
     });
 
     $this->get('byCode/{code}', function ($req, $res, $args) {
@@ -104,6 +118,18 @@ $app->group('/book/', function () {
            ->write(
             json_encode(
                 $um->bySerieCS($args['id_serie'], 'id_grade, name')
+            )
+        );
+    }); 
+     
+    $this->get('get/group/detail/{id_group}', function ($req, $res, $args) {
+        $um = new BookModel(); 
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $um->getBooksDetailsFromGroup($args['id_group'])
             )
         );
     });

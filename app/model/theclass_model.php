@@ -19,6 +19,8 @@ class TheClassModel extends GeneralConfig
     {
         $this->dbmaster = Database::StartUpMaster();
         $this->dbpe = Database::StartUpArea( isset($token_data->amb) ? $token_data->amb : $this->bd_base_pe );
+        $this->db = Database::StartUp();
+
         $this->response = new Response();
 
         $this->notification = new NotificationModel($token_data);
@@ -54,7 +56,7 @@ class TheClassModel extends GeneralConfig
             $id_user = $this->token_data->id;
             $amb = $this->token_data->amb; 
 
-            $stm = $this->dbpe->prepare("SELECT uc.date_joined, c.id, c.id_teacher, c.code, c.name, c.description, c.id_scholl, c.id_book, u.first_name teacher_first_name, u.last_name teacher_last_name, u.email teacher_email, '".$amb."' amb FROM $this->table_user_class uc INNER JOIN $this->table_class c on uc.id_class = c.id INNER JOIN $this->table_user u on c.id_teacher = u.id WHERE uc.id_user = ? and c.code = ?"); 
+            $stm = $this->dbpe->prepare("SELECT uc.date_joined, c.id, c.id_teacher, c.code, c.name, c.description, c.id_scholl, c.id_book, c.id_book_group, u.first_name teacher_first_name, u.last_name teacher_last_name, u.email teacher_email, '".$amb."' amb FROM $this->table_user_class uc INNER JOIN $this->table_class c on uc.id_class = c.id INNER JOIN $this->table_user u on c.id_teacher = u.id WHERE uc.id_user = ? and c.code = ? group by code"); 
 
             $stm->execute(array($id_user, $code_class));
 
@@ -76,7 +78,7 @@ class TheClassModel extends GeneralConfig
             $id_teacher = $this->token_data->id;
             $amb = $this->token_data->amb;   
 
-            $stm = $this->dbpe->prepare("SELECT uc.date_joined, c.id, c.id_teacher, c.code, c.name, c.description, c.id_scholl, c.id_book, u.first_name teacher_first_name, u.last_name teacher_last_name, u.email teacher_email, '".$amb."' amb FROM $this->table_class c INNER JOIN $this->table_user u on c.id_teacher = u.id LEFT JOIN $this->table_user_class uc on c.id = uc.id_class WHERE c.id_teacher = ? and c.code = ?"); 
+            $stm = $this->dbpe->prepare("SELECT uc.date_joined, c.id, c.id_teacher, c.code, c.name, c.description, c.id_scholl, c.id_book, c.id_book_group, u.first_name teacher_first_name, u.last_name teacher_last_name, u.email teacher_email, '".$amb."' amb FROM $this->table_class c INNER JOIN $this->table_user u on c.id_teacher = u.id LEFT JOIN $this->table_user_class uc on c.id = uc.id_class WHERE c.id_teacher = ? and c.code = ? group by code"); 
 
             $stm->execute(array($id_teacher, $code_class));
 
@@ -97,11 +99,11 @@ class TheClassModel extends GeneralConfig
         try
         {    
             $totalClass = array();
-            $totalAmbs = $this->getAllAmbs();
-            for($i=0; $i < count($totalAmbs); $i++)
-            {
-                $classAmb = $this->getAllByAmbTeacher($totalAmbs[$i]->amb, $totalAmbs[$i]->id_user_link, $totalAmbs[$i]->id);
+            $totalAmbs = $this->getAllAmbs(); 
 
+            for($i=0; $i < count($totalAmbs); $i++)
+            { 
+                $classAmb = $this->getAllByAmbTeacher($totalAmbs[$i]->amb, $totalAmbs[$i]->id_user_link, $totalAmbs[$i]->id); 
                 foreach ($classAmb as $key => $value) { 
                     array_push($totalClass, $value);
                 } 
@@ -161,41 +163,69 @@ class TheClassModel extends GeneralConfig
 
     public function getAllByAmbTeacher($amb, $id_user, $id_scholl = 0)
     {
-        $resultUserAmb = array();
-        $this->dbpeTemp = Database::StartUpArea($amb);
-        $stm = $this->dbpeTemp ->prepare("SELECT id FROM $this->table_user WHERE id_user_link = ?");
-        $stm->execute(array($id_user));
-        $resultUserAmb = $stm->fetch(); 
+        $resultUserAmb = $this->getUserByUserLink($amb, $id_user);
 
         $resultClass = array();
         $returnData = array(); 
-        $stm = $this->dbpeTemp ->prepare("SELECT *, '".$amb."' amb, '".$id_scholl."' id_scholl FROM $this->table_class WHERE id_teacher = ?");
+
+        $this->dbpeTemp = Database::StartUpArea($amb);
+        $stm = $this->dbpeTemp->prepare("SELECT id, id_book_group, name, code, id_scholl FROM $this->table_class WHERE id_teacher = ? group by code, id_book_group");
         $stm->execute(array($resultUserAmb->id));
         $resultClass = $stm->fetchAll();
-        foreach ($resultClass as $key => $value) { 
+
+
+        $resultClassChildren = array();
+        foreach ($resultClass as $key => $value) {  
+            $value->amb = $amb;
+            $this->dbpeTemp = Database::StartUpArea($amb);
+            $stm = $this->dbpeTemp->prepare("SELECT *, '".$amb."' amb, '".$id_scholl."' id_scholl FROM $this->table_class WHERE id_book_group = ? and code= ?"); 
+            $stm->execute(array($value->id_book_group, $value->code));
+            $resultClassChildren = $stm->fetchAll();
+            foreach ($resultClassChildren as $keyChildren => $valueChildren) {
+                $valueChildren->book = $this->getBook($valueChildren->id_book);
+            }
+            $value->books_linked = $resultClassChildren;
             array_push($returnData, $value);
-        }
+        }  
         return $returnData;
     }
 
     public function getAllByAmbAlumn($amb, $id_user, $id_scholl = 0)
     {
-        $resultUserAmb = array();
-        $this->dbpeTemp = Database::StartUpArea($amb);
-        $stm = $this->dbpeTemp ->prepare("SELECT id FROM $this->table_user WHERE id_user_link = ?");
-        $stm->execute(array($id_user));
-        $resultUserAmb = $stm->fetch();
+        $resultUserAmb = $this->getUserByUserLink($amb, $id_user); 
 
         $resultClass = array();
         $returnData = array(); 
         //$stm = $this->dbpeTemp ->prepare("SELECT *, '".$amb."' amb, '".$id_scholl."' id_scholl FROM $this->table_user_class WHERE id_user = ?");
-        $stm = $this->dbpeTemp->prepare("SELECT uc.date_joined, c.id, c.id_teacher, c.code, c.name, c.description, c.id_scholl, c.id_book, u.first_name teacher_first_name, u.last_name teacher_last_name, u.email teacher_email, '".$amb."' amb, '".$id_scholl."' id_scholl FROM $this->table_user_class uc INNER JOIN $this->table_class c on uc.id_class = c.id INNER JOIN $this->table_user u on c.id_teacher = u.id WHERE uc.id_user = ?");
+        $this->dbpeTemp = Database::StartUpArea($amb);
+        $stm = $this->dbpeTemp->prepare("SELECT uc.date_joined, c.id, c.id_teacher, c.code, c.name, c.description, c.id_scholl, c.id_book, c.id_book_group, u.first_name teacher_first_name, u.last_name teacher_last_name, u.email teacher_email, '".$amb."' amb, '".$id_scholl."' id_scholl FROM $this->table_user_class uc INNER JOIN $this->table_class c on uc.id_class = c.id INNER JOIN $this->table_user u on c.id_teacher = u.id WHERE uc.id_user = ? group by c.code, c.id_book_group");
         $stm->execute(array($resultUserAmb->id));
         $resultClass = $stm->fetchAll();
-        foreach ($resultClass as $key => $value) { 
+
+        $resultClassChildren = array();
+        foreach ($resultClass as $key => $value) {  
+            $value->amb = $amb;
+            $this->dbpeTemp = Database::StartUpArea($amb);
+            $stm = $this->dbpeTemp->prepare("SELECT *, '".$amb."' amb, '".$id_scholl."' id_scholl FROM $this->table_class WHERE id_book_group = ? and code= ?"); 
+            $stm->execute(array($value->id_book_group, $value->code));
+            $resultClassChildren = $stm->fetchAll();
+            foreach ($resultClassChildren as $keyChildren => $valueChildren) {
+                $valueChildren->book = $this->getBook($valueChildren->id_book);
+            }
+            $value->books_linked = $resultClassChildren;
             array_push($returnData, $value);
-        }
+        }  
         return $returnData;
+    }
+
+    private function getUserByUserLink($amb, $id_user_link)
+    {
+        $resultUserAmb = array();  
+        $this->dbpeTemp = Database::StartUpArea($amb);
+        $stm = $this->dbpeTemp ->prepare("SELECT id FROM $this->table_user WHERE id_user_link = ?");
+        $stm->execute(array($id_user_link));
+        $resultUserAmb = $stm->fetch();  
+        return $resultUserAmb;
     } 
 
     /*public function GetAllAlumn()
@@ -239,12 +269,12 @@ class TheClassModel extends GeneralConfig
     } 
    
 
-    public function GetAlumnsByCode($code_class)
+    public function GetAlumnsByCode($code_class, $id_teacher = false)
     { 
         try
         {
             $allActivitysClass = array();
-            $id_teacher = $this->token_data->id;
+            $id_teacher = (!$id_teacher) ? $this->token_data->id : $id_teacher;
             //var_dump($this->token_data);
             $stm = $this->dbpe->prepare("
                 SELECT r.id, r.id_class, r.type, r.id_calification_type, r.status
@@ -260,7 +290,7 @@ class TheClassModel extends GeneralConfig
                 FROM $this->table_user u 
                 INNER JOIN $this->table_user_class uc on u.id = uc.id_user 
                 INNER JOIN $this->table_class c on uc.id_class = c.id
-                where uc.code_class = ? and c.id_teacher = ?");                   
+                where uc.code_class = ? and c.id_teacher = ? group by u.id");                   
             $stm->execute(array($code_class, $id_teacher));
             $alumns = $stm->fetchAll();
 
@@ -324,7 +354,7 @@ class TheClassModel extends GeneralConfig
                 {
                     $this->dbpe = Database::StartUpArea($amb);  
                     $mode = 'edit';
-                    $sql = "UPDATE $this->table_class SET  
+                    $sql = "UPDATE $this->table_class SET   
                                 name        = ?, 
                                 description = ?,
                                 updated     = ?
@@ -332,7 +362,7 @@ class TheClassModel extends GeneralConfig
                     
                     $this->dbpe->prepare($sql)
                          ->execute(
-                            array( 
+                            array(  
                                 $data['name'], 
                                 $data['description'], 
                                 date('Y-m-d G:H:i'),
@@ -343,48 +373,70 @@ class TheClassModel extends GeneralConfig
                 }
                 else
                 {
+                    $cont_success = 0;
+                    $ids_inserted = array();
+                    $mode = 'new';
                     $id_scholl = $data["id_scholl"]; 
                     $resultScholl = (object)[]; 
                     $stm = $this->dbmaster->prepare("SELECT code FROM $this->table_scholls WHERE id = ?"); 
                     $stm->execute(array($id_scholl));
                     $resultScholl = $stm->fetch();
-                    $amb = $resultScholl->code;
+                    $amb = $resultScholl->code; 
 
                     $this->dbpe = Database::StartUpArea($amb);
                     $code = $this->generateCodeClass();
 
-                    $mode = 'new';
-                    $sql = "INSERT INTO $this->table_class
-                                (id_teacher, code, name, description, id_scholl, id_book, inserted)
-                                VALUES (?,?,?,?,?,?,?)";
-                    
-                    $this->dbpe->prepare($sql)
-                         ->execute(
-                            array(
-                                $this->token_data->id,
-                                $code,
-                                $data['name'], 
-                                isset($data['description']) ? $data['description'] : '',
-                                $data['id_scholl'],
-                                $data['id_book'], 
-                                date('Y-m-d G:H:i')
-                            )
-                        ); 
-                    $idresponse = $this->dbpe->lastInsertId();                
+                    $this->registerClassMaster($amb, $code);
+                    $dataUserReigster = $this->registerJoinUserScholl($this->token_data->idm, $id_scholl, $amb, $this->token_data->id);
+                   
+                    //book group
+                    $stm = $this->dbmaster->prepare("SELECT id_book_links FROM $this->table_book_group WHERE id = ?"); 
+                    $stm->execute(array($id_scholl));
+                    $resultScholl = $stm->fetch();
+
+                    $resultBookGroup = $this->getBooksFromGroup($data['id_book_group']);  
+                    if(count($resultBookGroup) > 0)
+                    {
+                        $id_book_group = $resultBookGroup[0]->id;
+                        $id_groups_array = explode( ',', $resultBookGroup[0]->id_book_links); 
+                        for($i = 0; $i < count($id_groups_array); $i++){ 
+                            $id_book_temp = $id_groups_array[$i];
+                            $sql = "INSERT INTO $this->table_class
+                                    (id_teacher, code, name, description, id_scholl, id_book, id_book_group, inserted)
+                                    VALUES (?,?,?,?,?,?,?,?)";
+                        
+                            $this->dbpe->prepare($sql)
+                                 ->execute(
+                                    array(
+                                        $dataUserReigster["id_user"],
+                                        $code,
+                                        $data['name'], 
+                                        isset($data['description']) ? $data['description'] : '',
+                                        $data['id_scholl'],                                        
+                                        $id_book_temp, 
+                                        $id_book_group,
+                                        date('Y-m-d G:H:i')
+                                    )
+                                ); 
+                            $idresponse = $this->dbpe->lastInsertId();    
+                            if( $idresponse > 0 ){
+                                $cont_success++;
+                                array_push($ids_inserted, $idresponse);
+                                $this->recreateResourcesBase($idresponse, $id_book_temp); 
+                            } 
+                        }           
+                    }  
+
                 } 
  
-                if( $idresponse > 0 )
-                { 
-                    if($mode == 'new'){ 
-                        $this->registerClassMaster($amb, $code);
-                        $this->registerJoinUserScholl($this->token_data->idm, $id_scholl, $amb, $this->token_data->id);
-                        $this->recreateResourcesBase($idresponse, $data['id_book']);
-                        $this->response->result = array('id' =>  $idresponse,'code' => $code ); 
-                    }else{ 
-                        $this->response->result = array('id' =>  $idresponse ); 
-                    }
+                
+                if($mode == 'new' && count($ids_inserted) == count($resultBookGroup)){                          
+                    $this->response->result = array('id' =>  $ids_inserted,'code' => $code ); 
                     $this->response->setResponse(true); 
-                }
+                }else if($mode == 'edit' && $idresponse > 0){ 
+                    $this->response->result = array('id' =>  $idresponse ); 
+                    $this->response->setResponse(true); 
+                } 
                 else
                 {
                     $this->response->setResponse(false); 
@@ -393,9 +445,40 @@ class TheClassModel extends GeneralConfig
                 
             }catch (Exception $e) 
             {
-                $this->response->setResponse(false, $e->getMessage());
+                $this->response->setResponse(false, $e->getMessage()); 
             }
         } 
+    }
+
+    private function getBooksFromGroup($id_book_group)
+    { 
+        try
+        {
+            $stm = $this->dbmaster->prepare("SELECT id, code, name, id_book_links FROM $this->table_book_group WHERE id = ?"); 
+            $stm->execute(array($id_book_group)); 
+            $resultBookGroup = $stm->fetchAll();
+            return $resultBookGroup;
+        }
+        catch(Exception $e)
+        {
+            return array();
+        }
+    }
+
+    private function getBook($id_book)
+    { 
+        try
+        {
+            $resultBook = array(); 
+            $stm = $this->db->prepare("SELECT id, code, name FROM $this->table_book WHERE id = ?"); 
+            $stm->execute(array($id_book)); 
+            $resultBook = $stm->fetch();
+            return $resultBook;
+        }
+        catch(Exception $e)
+        {
+            return array();
+        }
     }
 
     private function recreateResourcesBase($id_class, $id_book)

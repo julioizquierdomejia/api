@@ -71,11 +71,15 @@ class BookModel extends GeneralConfig
             $id_user_master = $this->token_data->idm;
             $stm = $this->dbmaster->prepare("SELECT id_book, id_book_group, date_expired FROM $this->table_book_code WHERE id_user_join = ? and id_status = 2");
             $stm->execute(array($id_user_master));
-            $result = $stm->fetchAll();
+            $result = $stm->fetchAll(); 
 
             if( count($result) > 0){
                 foreach ($result as $row) { 
-                    $resultGlobal = $this->getBookDataRel($row->id_book, $row->id_book_group);
+                    $resultBookGroup = $this->getBooksFromGroup($row->id_book_group);                    
+                    $id_book_groups = $resultBookGroup[0]->id_book_links;  
+
+                    $resultGlobal = $this->getBookDataRel($id_book_groups);
+                    $resultGlobal["books_group"] = $resultBookGroup;
                 }
             } 
 
@@ -90,15 +94,80 @@ class BookModel extends GeneralConfig
         }  
     }
 
-    private function getBookDataRel($id_book, $id_book_group)
+    public function CheckCode($code)
+    {
+        try
+        {
+            //var_dump($code);
+            $result = array();
+            $stm = $this->dbmaster->prepare("
+                SELECT id, code, id_book, id_book_group, id_status 
+                FROM $this->table_book_code 
+                WHERE code = ? and enabled = 1"); 
+            $stm->execute(array($code));
+            $result = $stm->fetchAll();
+
+            if( count($result) > 0 )
+            {
+                $detail = $this->getBooksDetailsFromGroup($result[0]->id_book_group, false);
+                $this->response->result = $detail;
+                $this->response->setResponse(true); 
+            }else{
+                $this->response->setResponse(false); 
+            } 
+            return $this->response;
+        }
+        catch (Exception $e) 
+        {
+            return $this->response;
+        }
+    }
+
+    public function getBooksDetailsFromGroup($id_book_group, $json = true)
+    { 
+        try
+        {  
+            $resultBookGroup = $this->getBooksFromGroup($id_book_group);     
+            $id_book_groups = $resultBookGroup[0]->id_book_links;  
+
+            $resultGlobal = $this->getBookDataRel($id_book_groups);
+            $resultGlobal["books_group"] = $resultBookGroup;
+
+            if($json){
+                $this->response->result = $resultGlobal;
+                $this->response->setResponse(true);   
+                return $this->response;
+            }else{
+                return $resultGlobal;
+            }
+
+           
+        }
+        catch(Exception $e)
+        {
+            return array();
+        }
+    }
+
+    private function getBooksFromGroup($id_book_group)
+    {
+        try
+        { 
+            $stm = $this->dbmaster->prepare("SELECT id, code, name, id_book_links FROM $this->table_book_group WHERE id = ?"); 
+            $stm->execute(array($id_book_group)); 
+            $resultBookGroup = $stm->fetchAll();
+            return $resultBookGroup;
+        }
+        catch(Exception $e)
+        {
+            return array();
+        }
+    }
+
+    private function getBookDataRel($id_book_groups)
     {
 
-        $resultBookGroup = array(); 
-        $stm = $this->dbmaster->prepare("SELECT id_book_links FROM $this->table_book_group WHERE id = ?");
-        $stm->execute(array($id_book_group));
-        $resultBookGroup = $stm->fetch(); 
-        $id_book_groups = $resultBookGroup->id_book_links; 
-
+        
 
         $globalData = array("series" => array(), "studystages" => array(), "books" => array()); 
         $id_groups = explode( ',', $id_book_groups); 
@@ -129,7 +198,7 @@ class BookModel extends GeneralConfig
         } 
 
       
-       
+        
 
         return $globalData;
     }

@@ -23,6 +23,22 @@ $app->group('/user/', function () {
       );
     }); 
 
+    $this->get('get/extraInfo', function ($req, $res) { 
+      $token_data = $req->getAttribute("decoded_token_data")["sub"];
+      $um = new UserModel($token_data);
+      
+      return $res
+         ->withHeader('Content-type', 'application/json')
+         ->getBody()
+         ->write(
+          json_encode(
+            $um->GetExtraInfo()
+          )
+      );
+    }); 
+
+    
+
     $this->get('getJoinType', function ($req, $res) { 
       $um = new UserModel();
       
@@ -86,6 +102,22 @@ $app->post('/user', function ($req, $res) {
      ->write(
       json_encode(
         $um->register( $req->getParsedBody() )
+      )
+  );
+});
+
+$app->post('/user/set/tutorialClass', function ($req, $res) { 
+  $token_data = $req->getAttribute("decoded_token_data")["sub"];
+  $um = new UserModel($token_data);
+  $data = $req->getParsedBody();
+  $data["field"] = 'tutorialClass';
+
+  return $res
+     ->withHeader('Content-type', 'application/json')
+     ->getBody()
+     ->write(
+      json_encode(
+        $um->UpdateField( $data )
       )
   );
 }); 

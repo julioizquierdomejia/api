@@ -272,7 +272,8 @@ class LearningModel extends GeneralConfig
         $cond = ($status == false) ? '' : ' and qj.status = '.$status;
 
         $result = array(); 
-        $stm = $this->dbpeTemp->prepare("SELECT c.id,c.code,qj.id_user id_alumn, score, id_calification_type, status FROM $this->table_question_join qj INNER JOIN $this->table_class c on qj.id_class = c.id WHERE c.id_teacher = ?" . $cond);
+        $stm = $this->dbpeTemp->prepare("SELECT '".$amb."' amb, c.name, c.id,c.code,qj.id_user id_alumn, score, id_calification_type, status FROM $this->table_question_join qj INNER JOIN $this->table_class c on qj.id_class = c.id WHERE c.id_teacher = ?" . $cond);
+
         $stm->execute(array($resultUserAmb->id)); 
         $result = $stm->fetchAll();
         foreach ($result as $key => $value) { 
@@ -335,10 +336,67 @@ class LearningModel extends GeneralConfig
         } 
     }
 
+    public function GetAllScoresByClassAlumn($code_class){
+        try
+        { 
+            $returnData = array();
+            $resultActivitys = array();
+            $id_user = $this->token_data->id; 
+            //var_dump($this->token_data);
+            $stm = $this->dbpe ->prepare("
+                SELECT r.id_class, r.name, r.id, r.value, r.page, r.id_session id_session, s.name name_session, s.number number_session
+                FROM $this->table_resources r
+                INNER JOIN $this->table_class c on r.id_class = c.id 
+                INNER JOIN $this->table_user_class uc on r.id_class = uc.id_class 
+                LEFT JOIN $this->table_sessions s on r.id_session = s.id
+                WHERE c.code = ? and uc.id_user = ? and r.type in (1,2)
+                order by r.page");
+            $stm->execute(array($code_class, $id_user));
+            $resultActivitys = $stm->fetchAll();  
+
+            $resultAlumnsActivitys = array(); 
+            $code_alumn =uniqid();
+            $stm = $this->dbpe->prepare("
+                SELECT u.id, u.first_name, u.last_name, uc.code_class, uc.id_class, qj.status, qj.score, qj.date_scored, qj.id_resource, qj.id_calification_type, qj.code code_question, qj.id id_question,
+                    '".$code_alumn."' code_alumn,  r.id_unity
+                FROM $this->table_user u
+                LEFT JOIN $this->table_user_class uc on u.id = uc.id_user
+                LEFT JOIN $this->table_class c on uc.id_class = c.id
+                INNER JOIN $this->table_question_join qj on uc.id_class = qj.id_class and u.id = qj.id_user
+                INNER JOIN $this->table_resources r on qj.id_resource = r.id
+                WHERE u.id_type = 1 and c.code = ? and uc.id_user = ?
+                ORDER BY u.first_name, u.last_name");
+            $stm->execute(array($code_class, $id_user)); 
+            $resultAlumnsActivitys = $stm->fetchAll();
+
+
+            $resultAlumns = array(); 
+            $stm = $this->dbpe->prepare("
+                SELECT u.id, u.first_name, u.last_name, uc.code_class, uc.id_class 
+                FROM $this->table_user u
+                LEFT JOIN $this->table_user_class uc on u.id = uc.id_user
+                LEFT JOIN $this->table_class c on uc.id_class = c.id
+                WHERE u.id_type = 1 and c.code = ? and uc.id_user = ?
+                ORDER BY u.first_name, u.last_name");
+            $stm->execute(array($code_class, $id_user)); 
+            $resultAlumns = $stm->fetchAll();
+
+            $this->response->result = array("activitys" => $resultActivitys, "alumns_activitys" => $resultAlumnsActivitys, "alumns" => $resultAlumns);
+            $this->response->setResponse(true);  
+            return $this->response;
+
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        } 
+    } 
+
     public function GetAllScoresByClassByUnity($code_class, $id_unity){
         try
         {
-            $returnData = array();
+            $returnData = array(); 
 
             $resultActivitys = array();
             $id_teacher = $this->token_data->id; 
@@ -391,6 +449,64 @@ class LearningModel extends GeneralConfig
         } 
     }
 
+     public function GetAllScoresByClassAlumnByUnity($code_class, $id_unity){
+        try
+        {
+            $returnData = array(); 
+
+            $resultActivitys = array();
+            $id_user = $this->token_data->id;  
+
+             $stm = $this->dbpe ->prepare("
+                SELECT r.id_class, r.name, r.id, r.value, r.page, r.id_session id_session, s.name name_session, s.number number_session
+                FROM $this->table_resources r
+                INNER JOIN $this->table_class c on r.id_class = c.id 
+                INNER JOIN $this->table_user_class uc on r.id_class = uc.id_class 
+                LEFT JOIN $this->table_sessions s on r.id_session = s.id
+                WHERE c.code = ? and uc.id_user = ? and r.type in (1,2) and r.id_unity = ?
+                order by r.page");
+
+            $stm->execute(array($code_class, $id_user, $id_unity));
+            $resultActivitys = $stm->fetchAll();  
+
+            $resultAlumnsActivitys = array(); 
+            $code_alumn =uniqid();
+            $stm = $this->dbpe->prepare("
+                SELECT u.id, u.first_name, u.last_name, uc.code_class, uc.id_class, qj.status, qj.score, qj.date_scored, qj.id_resource, qj.id_calification_type, qj.code code_question, qj.id id_question,
+                    '".$code_alumn."' code_alumn
+                FROM $this->table_user u
+                LEFT JOIN $this->table_user_class uc on u.id = uc.id_user
+                LEFT JOIN $this->table_class c on uc.id_class = c.id
+                INNER JOIN $this->table_question_join qj on uc.id_class = qj.id_class and u.id = qj.id_user
+                INNER JOIN $this->table_resources r on qj.id_resource = r.id
+                WHERE u.id_type = 1 and c.code = ? and uc.id_user = ? and r.id_unity = ?
+                ORDER BY u.first_name, u.last_name");
+            $stm->execute(array($code_class, $id_user, $id_unity)); 
+            $resultAlumnsActivitys = $stm->fetchAll();
+
+            $resultAlumns = array(); 
+            $stm = $this->dbpe->prepare("
+                SELECT u.id, u.first_name, u.last_name, uc.code_class, uc.id_class 
+                FROM $this->table_user u
+                LEFT JOIN $this->table_user_class uc on u.id = uc.id_user
+                LEFT JOIN $this->table_class c on uc.id_class = c.id
+                WHERE u.id_type = 1 and c.code = ? and uc.id_user = ?
+                ORDER BY u.first_name, u.last_name");
+            $stm->execute(array($code_class, $id_user)); 
+            $resultAlumns = $stm->fetchAll();
+
+            $this->response->result = array("activitys" => $resultActivitys, "alumns_activitys" => $resultAlumnsActivitys, "alumns" => $resultAlumns);
+            $this->response->setResponse(true);  
+            return $this->response;
+
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        } 
+    }
+
     public function GetAllEvaluationByStatus($status = false)
     {
         try
@@ -429,6 +545,33 @@ class LearningModel extends GeneralConfig
             $result = array(); 
             $stm = $this->dbpe->prepare("SELECT c.id,c.code, qj.id_user id_alumn, qj.score, qj.id_calification_type, qj.status FROM $this->table_question_join qj INNER JOIN $this->table_class c on qj.id_class = c.id WHERE c.id_teacher = ? and c.code = ? " . $cond);
             $stm->execute(array($id_user, $code_class)); 
+            $result = $stm->fetchAll();
+            $this->response->result = $result;
+            $this->response->setResponse(true);  
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        } 
+    }
+
+    public function GetEvaluationAlumnByClassByStatus($code_class, $status = false)
+    {
+        try
+        { 
+            $id_user = $this->token_data->id;
+            $cond = ($status == false) ? '' : ' and qj.status = '.$status;
+
+            $result = array(); 
+            $stm = $this->dbpe->prepare("
+                SELECT c.id,c.code, qj.id id_question, qj.id_user id_alumn, qj.score, qj.id_calification_type, qj.status 
+                FROM $this->table_question_join qj 
+                INNER JOIN $this->table_class c on qj.id_class = c.id 
+                INNER JOIN $this->table_user_class uc on c.id = uc.id_class 
+                WHERE uc.id_user = ? and qj.id_user = ? and c.code = ?" . $cond);
+            $stm->execute(array($id_user, $id_user, $code_class)); 
             $result = $stm->fetchAll();
             $this->response->result = $result;
             $this->response->setResponse(true);  
