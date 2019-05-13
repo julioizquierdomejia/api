@@ -94,7 +94,7 @@ class ResourceModel extends GeneralConfig
         }
     }
     
-    public function Get($id)
+    public function Get($id, $returnArray = false)
     {
 		try
 		{
@@ -118,8 +118,13 @@ class ResourceModel extends GeneralConfig
             $thedata = $stm->fetch();
             $thedata->indicators_count = $this->getNumIndicators($id);
             $this->response->result = $thedata;
-            
-            return $this->response;
+
+            if($returnArray){
+                return $thedata;
+            }else{
+                return $this->response;
+            } 
+           
 		}
 		catch(Exception $e)
 		{
@@ -896,7 +901,8 @@ class ResourceModel extends GeneralConfig
                 $id_score_letter = $data["id_score_letter"];
                 $score = $data["score"];
                 $status_evaluate = 2;
-                $id_resource = $data["id_resource"]; 
+                $id_resource = $data["id_resource"];  
+                $code_resource = $this->Get( $id_resource )->result->code;
                 $id_book = $data["id_book"]; 
                 $amb = $this->token_data->amb;
 
@@ -943,7 +949,7 @@ class ResourceModel extends GeneralConfig
                                 array( "name" => "book", "id" => $id_book )
                             ); 
                     
-                        $linkData = array("amb" => $amb, "code_class" => $class_code, "code_question" =>  $id_question . "_" . $code_question);  
+                        $linkData = array("amb" => $amb, "code_class" => $class_code, "code_question" =>  $id_question . "_" . $code_question, "id_resource" => $id_resource, "code_resource" => $code_resource);  
 
                         $this->notification->privateRegister($this->evaluation_realized_teacher, $id_alumn, $amb, $notifData, $id_teacher, $linkData);
 
