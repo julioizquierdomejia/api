@@ -10,8 +10,9 @@ $app->group('/user/', function () {
         ->write('Hello Users');
     });  
 
-    $this->get('getType', function ($req, $res) { 
-      $um = new UserModel();
+    $this->get('getAll/groups', function ($req, $res) { 
+      $token_data = $req->getAttribute("decoded_token_data")["sub"];
+      $um = new UserModel($token_data);
       
       return $res
          ->withHeader('Content-type', 'application/json')
@@ -19,6 +20,20 @@ $app->group('/user/', function () {
          ->write(
           json_encode(
             $um->getType()
+          )
+      );
+    });  
+
+    $this->get('getAll/groups/byCodeClass/{code_class}', function ($req, $res, $args) { 
+      $token_data = $req->getAttribute("decoded_token_data")["sub"];
+      $um = new UserModel($token_data);
+
+      return $res
+         ->withHeader('Content-type', 'application/json')
+         ->getBody()
+         ->write(
+          json_encode(
+            $um->GetAllGroupsByCodeClass($args["code_class"])
           )
       );
     }); 
@@ -118,6 +133,35 @@ $app->post('/user/set/tutorialClass', function ($req, $res) {
      ->write(
       json_encode(
         $um->UpdateField( $data )
+      )
+  );
+}); 
+ 
+
+ $app->post('/user/groups', function ($req, $res) { 
+  $token_data = $req->getAttribute("decoded_token_data")["sub"];
+  $um = new UserModel($token_data); 
+
+  return $res
+     ->withHeader('Content-type', 'application/json')
+     ->getBody()
+     ->write(
+      json_encode(
+        $um->InserOrUpdateGroup( $req->getParsedBody() )
+      )
+  );
+}); 
+
+$app->delete('/user/groups/{code_class}/{id_user_group}', function ($req, $res, $args) { 
+  $token_data = $req->getAttribute("decoded_token_data")["sub"];
+  $um = new UserModel($token_data); 
+
+  return $res
+     ->withHeader('Content-type', 'application/json')
+     ->getBody()
+     ->write(
+      json_encode(
+        $um->deleteUsersGroup( $args["id_user_group"], $args["code_class"], true )
       )
   );
 }); 

@@ -86,7 +86,11 @@ class ResourceModel extends GeneralConfig
             $this->dbpeTemp = Database::StartUpArea($this->bd_base_pe);  
             $stm = $this->dbpeTemp->prepare("SELECT id FROM $this->table where code = ?");
             $stm->execute(array($code)); 
-            return $stm->fetch()->id; 
+            $result = $stm->fetch();
+            if( $result === false ){
+                return false;
+            }
+            return $result->id; 
         }
         catch(Exception $e)
         {   
@@ -101,13 +105,13 @@ class ResourceModel extends GeneralConfig
 			$result = array(); 
 
             if( $this->token_data->amb == $this->bd_base_pe ){
-                $stm = $this->dbpe->prepare("SELECT r.id, r.code, r.name, r.description, r.id_unity, r.id_book, r.type, r.value, r.page, r.time_band, r.time, r.button_color, r.button_title, r.button_left, r.button_top, r.button_icon, r.head_img_path, r.head_style, r.url, r.text_extra, r.status, r.id_calification_type
+                $stm = $this->dbpe->prepare("SELECT r.id, r.code, r.name, r.description, r.id_unity, r.id_book, r.type, r.value, r.page, r.time_band, r.time, r.button_color, r.button_title, r.button_left, r.button_top, r.button_icon, r.head_img_path, r.head_style, r.url, r.text_extra, r.status, r.id_calification_type, r.id_session
                     FROM $this->table r  
                     WHERE r.id = ?");  
                     $stm->execute(array($id));
             }
             else{
-                $stm = $this->dbpe->prepare("SELECT r.id, r.code, r.name, r.description, r.id_unity, r.id_book, r.type, r.value, r.page, r.time_band, r.time, r.button_color, r.button_title, r.button_left, r.button_top, r.button_icon, r.head_img_path, r.head_style, r.url, r.text_extra, r.status, r.id_calification_type, qj.score, qj.id_score_letter, qj.date_scored, qj.inserted date_resolved, IF(qj.id > 0, 1, 0) resolved, r.id_class, IF(qj.status is null, 0, qj.status) estatus_evaluate, qj.id question_id, qj.code question_code 
+                $stm = $this->dbpe->prepare("SELECT r.id, r.code, r.name, r.description, r.id_unity, r.id_book, r.type, r.value, r.page, r.time_band, r.time, r.button_color, r.button_title, r.button_left, r.button_top, r.button_icon, r.head_img_path, r.head_style, r.url, r.text_extra, r.status, r.id_calification_type, r.id_session, qj.score, qj.id_score_letter, qj.date_scored, qj.inserted date_resolved, IF(qj.id > 0, 1, 0) resolved, r.id_class, IF(qj.status is null, 0, qj.status) estatus_evaluate, qj.id question_id, qj.code question_code 
                     FROM $this->table r 
                     LEFT JOIN $this->table_question_join qj on (r.id = qj.id_resource and qj.id_resource = ?) 
                     WHERE r.id = ?");  
@@ -117,6 +121,8 @@ class ResourceModel extends GeneralConfig
 			$this->response->setResponse(true);
             $thedata = $stm->fetch();
             $thedata->indicators_count = $this->getNumIndicators($id);
+            $thedata->files = $this->getResourseUpload($thedata->id, false);  
+
             $this->response->result = $thedata;
 
             if($returnArray){
@@ -131,6 +137,34 @@ class ResourceModel extends GeneralConfig
 			$this->response->setResponse(false, $e->getMessage());
             return $this->response;
 		}  
+    }
+
+    public function getResourseUpload($id_resource, $apiResponse = true)
+    { 
+        try
+        {
+            $result = array(); 
+            $stm = $this->dbpe->prepare("SELECT * FROM $this->table_upload WHERE id_resource = ?"); 
+            $stm->execute(array($id_resource)); 
+            $result = $stm->fetchAll();
+
+            if($apiResponse){
+                $this->response->setResponse(true);
+                $this->response->result = $result;
+                return $this->response;
+            }else{
+                return $result;
+            } 
+        }
+        catch(Exception $e)
+        {
+            if($apiResponse){
+                $this->response->setResponse(false, $e->getMessage());
+                return $this->response;
+            }else{
+                return false;
+            }
+        }  
     }
 
     public function getNumIndicators($id_resource){
@@ -266,6 +300,8 @@ class ResourceModel extends GeneralConfig
     {
         try
         {
+            /*var_dump($id_unity);
+            var_dump($class_code);*/
             if($class_code == 'base'){ 
                  $stm = $this->dbpe->prepare("SELECT r.id, r.code, r.name, r.description, r.id_unity, r.id_book, r.type, r.value, r.page, r.time_band, r.time, r.button_color, r.button_title, r.button_left, r.button_top, r.button_icon, r.head_img_path, r.head_style, r.url, r.text_extra, r.status, r.id_calification_type 
                     FROM $this->table r 
@@ -547,7 +583,7 @@ class ResourceModel extends GeneralConfig
                                 $data['url'],
                                 $data['text_extra'],
                                 $data['id_class'],
-                                ( $data['id_session'] == '' ) ? NULL : $data['id_session'] == '',
+                                ( $data['id_session'] == '' ) ? NULL : $data['id_session'],
                                 $data['id_calification_type'],
                                 date('Y-m-d G:H:i'),
                                 $data['id']
@@ -584,7 +620,7 @@ class ResourceModel extends GeneralConfig
                                 $data['url'],
                                 $data['text_extra'],
                                 $data['id_class'],
-                                ( $data['id_session'] == '' ) ? NULL : $data['id_session'] == '',
+                                ( $data['id_session'] == '' ) ? NULL : $data['id_session'],
                                 $data['id_calification_type'],
                                 $id_user,
                                 date('Y-m-d G:H:i')

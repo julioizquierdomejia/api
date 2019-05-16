@@ -313,7 +313,7 @@ class TheClassModel extends GeneralConfig
     public function GetDetailAlumnsByCode($code_class, $id_teacher, $id_user)
     { 
         try
-        {  
+        {   
             $result = array();
             $stm = $this->dbpe->prepare("
                 SELECT qj.status, qj.id, qj.score, qj.id_calification_type, qj.id_resource, qj.id_user

@@ -272,7 +272,7 @@ class LearningModel extends GeneralConfig
         $cond = ($status == false) ? '' : ' and qj.status = '.$status;
 
         $result = array(); 
-        $stm = $this->dbpeTemp->prepare("SELECT '".$amb."' amb, c.name, c.id,c.code,qj.id_user id_alumn, score, id_calification_type, status FROM $this->table_question_join qj INNER JOIN $this->table_class c on qj.id_class = c.id WHERE c.id_teacher = ?" . $cond);
+        $stm = $this->dbpeTemp->prepare("SELECT '".$amb."' amb, c.name, c.id,c.code,qj.id_user id_alumn, score, id_calification_type, status, qj.id_resource FROM $this->table_question_join qj INNER JOIN $this->table_class c on qj.id_class = c.id WHERE c.id_teacher = ?" . $cond);
 
         $stm->execute(array($resultUserAmb->id)); 
         $result = $stm->fetchAll();
@@ -593,7 +593,7 @@ class LearningModel extends GeneralConfig
             $code = uniqid();
 
             $result = array(); 
-            $stm = $this->dbpe->prepare("SELECT c.id,c.code, qj.id id_question, qj.code code_question,  qj.id_user id_alumn, '".$code."' code_alumn, u.first_name, u.last_name, r.name, r.page, qj.score, qj.id_calification_type, qj.status, date_format(qj.inserted, '%e/%c/%Y a las %l:%i %p') date_inserted, date_format(qj.inserted, 'a las %l:%i %p') date_inserted_hour, qj.inserted, DATEDIFF(now(),qj.inserted) daysago
+            $stm = $this->dbpe->prepare("SELECT c.id,c.code, qj.id id_question, qj.code code_question,  qj.id_user id_alumn, '".$code."' code_alumn, u.first_name, u.last_name, r.name, r.page, qj.score, qj.id_calification_type, qj.status, date_format(qj.inserted, '%e/%c/%Y a las %l:%i %p') date_inserted, date_format(qj.inserted, 'a las %l:%i %p') date_inserted_hour, qj.inserted,qj.id_resource, DATEDIFF(now(),qj.inserted) daysago
                 FROM $this->table_question_join qj 
                 INNER JOIN $this->table_class c on qj.id_class = c.id 
                 INNER JOIN $this->table_user u on qj.id_user = u.id

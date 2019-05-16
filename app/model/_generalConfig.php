@@ -30,6 +30,8 @@ class GeneralConfig
     public $table_studystage = 'studystage';
     public $table_scholls = 'scholls';
     public $table_book_group = 'book_group_master';
+    public $table_users_group = 'users_group';
+    public $table_users_group_user = 'users_group_user';
 
     public $table_resources = 'resource';
     public $table_resources_type = 'resource_type';

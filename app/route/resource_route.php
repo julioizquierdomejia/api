@@ -92,7 +92,7 @@ $app->group('/resource/', function (){
         );
     });  
 
-    $this->get('byUnity/{id}/{class_code}', function ($req, $res, $args) {
+    $this->get('byUnity/{id_unity}/{class_code}', function ($req, $res, $args) {
         $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
         $rm = new ResourceModel($token_data); 
 
@@ -101,12 +101,12 @@ $app->group('/resource/', function (){
            ->getBody()
            ->write(
             json_encode(
-                $rm->byUnity($args['id'], $args['class_code'])
+                $rm->byUnity($args['id_unity'], $args['class_code'])
             )
         );
     });
 
-    $this->get('activity/byUnity/{id}', function ($req, $res, $args) {
+    $this->get('activity/byUnity/{id_unity}', function ($req, $res, $args) {
         $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
         $rm = new ResourceModel($token_data); 
 
@@ -115,7 +115,7 @@ $app->group('/resource/', function (){
            ->getBody()
            ->write(
             json_encode(
-                $rm->byUnityActivity($args['id'])
+                $rm->byUnityActivity($args['id_unity'])
             )
         );
     });
@@ -214,7 +214,10 @@ $app->group('/resource/', function (){
       $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
       $rm = new ResourceModel($token_data); 
 
-      $id_base = ($token_data->amb != 'basepe') ? $rm->getIdBase($args['code']) : $args['id'];
+      $id_base = $rm->getIdBase($args['code']);
+      $id_base = ( $id_base === false ) ? $args['id'] : $id_base;
+
+      $id_base = ($token_data->amb != 'basepe') ? $id_base : $args['id'];
 
       $filename = $id_base . '_' . $args['code'] . "_fbdata.json"; 
       $path = "../../lib/media/pe-content/activitys/" . $filename;   

@@ -1,8 +1,9 @@
 <?php
 namespace App\Model;
 
+use App\Model\TheClassModel; 
 use App\Lib\Database;
-use App\Lib\Response; 
+use App\Lib\Response;  
 
 class UserModel extends GeneralConfig
 {
@@ -148,6 +149,232 @@ class UserModel extends GeneralConfig
             $this->response->setResponse(true);
             $this->response->result = $stm->fetch();
             
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }
+    }
+
+    public function GetAllGroups()
+    {
+        try
+        {
+            $result = array();
+
+            $stm = $this->dbpe->prepare("SELECT * FROM $this->table_users_group order by name");
+            $stm->execute();
+            
+            $this->response->setResponse(true);
+            $result = $stm->fetchAll(); 
+
+            foreach ($result as $key => $group) { 
+                $group->users = $this->GetUsersByGroup($group->id, $group->code_class, false);
+            }
+            $this->response->result = $result;            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }
+    }
+
+    public function GetUsersByGroup($id_user_group, $code_class, $apiResponse = true)
+    {
+        try
+        {
+            $result = array();
+            $id_teacher = $this->token_data->id;
+
+            $stm = $this->dbpe->prepare("SELECT ugu.id id_user_group_detail, ugu.id_user_group, u.first_name, u.last_name, u.email, u.id id FROM $this->table_users_group_user ugu INNER JOIN $this->table_user u on ugu.id_user = u.id where id_user_group = ?");
+            $stm->execute( array($id_user_group) );
+            
+            $this->response->setResponse(true);
+            $result = $stm->fetchAll();   
+
+            $cm = new TheClassModel($this->token_data);
+
+            foreach ($result as $alumn) {
+                $alumn->detailActivitys = $cm->GetDetailAlumnsByCode($code_class, $id_teacher, $alumn->id);
+            } 
+
+            if($apiResponse){
+                $this->response->result = $result;            
+                return $this->response;
+            } 
+            return $result;            
+        }
+        catch(Exception $e)
+        {
+            if($apiResponse){
+                $this->response->setResponse(false, $e->getMessage());
+                return $this->response;
+            } 
+            return false; 
+        }
+    }
+
+    public function InserOrUpdateGroup($data)
+    {
+        $id_teacher = $this->token_data->id;
+        $amb = $this->token_data->amb;
+        if( $data == null ) 
+        {
+            $this->response->setResponse(false, "Error, no data");
+            return $this->response;
+        }
+        else
+        { 
+            try 
+            {
+                if(isset($data['id_user_group']))
+                {
+ 
+                    $sql = "UPDATE $this->table_users_group SET 
+                                name        = ?,  
+                                id_teacher  = ?,
+                                updated     = ?
+                            WHERE id = ? and code_class = ?";
+                    
+                    $this->dbpe->prepare($sql)
+                         ->execute(
+                            array( 
+                                $data['name'], 
+                                $id_teacher, 
+                                date('Y-m-d G:H:i'),
+                                $data['id_user_group'],
+                                $data['code_class'],
+                            )
+                        ); 
+                    $idresponse = $data['id_user_group'];
+                }
+                else
+                {
+                    $sql = "INSERT INTO $this->table_users_group
+                                (name, id_teacher, code_class, inserted)
+                                VALUES (?,?,?,?)";
+                     
+                    $this->dbpe->prepare($sql)
+                         ->execute(
+                            array( 
+                                $data['name'], 
+                                $id_teacher, 
+                                $data['code_class'], 
+                                date('Y-m-d G:H:i')
+                            )
+                        ); 
+                    $idresponse = $this->dbpe->lastInsertId();      
+
+                }  
+ 
+                if( $idresponse > 0 ){
+                    $resultUsersInsert = $this->InserOrUpdateGroupUsers( $idresponse, $data['code_class'], $data['alumns'] );
+                    if($resultUsersInsert["success"]){
+                        $this->response->result = array('id_user_group' =>  $idresponse );
+                        $this->response->setResponse(true);
+                        return $this->response;
+                    }else{
+                        $this->deleteUsersGroup($idresponse, $code_class, false); 
+                    }
+                }  
+                $this->response->setResponse(false);
+                return $this->response;
+                
+            }catch (Exception $e) 
+            {
+                $this->response->setResponse(false, $e->getMessage());
+                return $this->response;
+            }
+        } 
+    }
+
+    public function InserOrUpdateGroupUsers($id_user_group, $code_class, $alumns)
+    { 
+        if( $alumns == null ) 
+        {
+            return array("success"=>false);
+        }
+        else
+        { 
+            try 
+            {
+                $cont = 0;
+                foreach ($alumns as $key => $alumn) { 
+                    $id_user_temp = $alumn["id"];
+                    $sql = "INSERT INTO $this->table_users_group_user
+                            ( id_user_group , id_user, code_class, inserted)
+                            VALUES (?,?,?,?)";
+                 
+                    $this->dbpe->prepare($sql)
+                         ->execute(
+                            array(  
+                                $id_user_group,
+                                $id_user_temp,                                
+                                $code_class, 
+                                date('Y-m-d G:H:i')
+                            )
+                        ); 
+                    $idresponse = $this->dbpe->lastInsertId();  
+                    if($idresponse > 0)
+                        $cont++;                    
+                } 
+
+                if(count($alumns) == $cont){
+                    return array("success"=>true);
+                }else{
+                    return array("success"=>false);
+                }
+                
+            }catch (Exception $e) 
+            {
+                return array("success"=>false);
+            }
+        } 
+    }
+
+    public function deleteUsersGroup($id_user_group, $code_class, $apiResponse = true)
+    {
+        try 
+        {
+            $stm = $this->dbpe->prepare("DELETE FROM $this->table_users_group WHERE id = ? and code_class = ?");    
+            $stm->execute(array($id_user_group, $code_class));
+     
+            $stm = $this->dbpe->prepare("DELETE FROM $this->table_users_group_user WHERE id_user_group = ?");   
+            $stm->execute(array($id_user_group)); 
+
+            if($apiResponse){
+                $this->response->setResponse(true);       
+                return $this->response;
+            }
+        }catch (Exception $e) 
+        {
+            if($apiResponse){
+                $this->response->setResponse(false);       
+                return $this->response;
+            }
+        }
+    }
+
+    public function GetAllGroupsByCodeClass($code_class)
+    {
+        try
+        {
+            $result = array();
+
+            $stm = $this->dbpe->prepare("SELECT * FROM $this->table_users_group where code_class = ? order by name");
+            $stm->execute(array($code_class)); 
+            $result = $stm->fetchAll();   
+
+            foreach ($result as $key => $group) { 
+                $group->users = $this->GetUsersByGroup( $group->id, $group->code_class , false );
+            } 
+
+            $this->response->result = $result;     
+            $this->response->setResponse(true);       
             return $this->response;
         }
         catch(Exception $e)

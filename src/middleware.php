@@ -9,7 +9,7 @@ $app->add(function ($request, $response, $next) {
     $host = $request->getUri()->getHost();
     $cType = $request->getContentType();
 
-    if (strpos('application/json', $cType) !== false) {
+    if (strpos($cType, 'application/json') !== false) {
         if($host == 'ebiolibros.com' || $host == 'www.ebiolibros.com' )
         {
             if ($request->getUri()->getScheme() !== 'https') { 
@@ -23,11 +23,13 @@ $app->add(function ($request, $response, $next) {
     }
     else
     {
-        $data = array('response' => 'false', 'msg' => 'Strict use Content-Type application/json');
-        return $response
-                ->withHeader("Content-Type", "application/json")
-                ->write(json_encode($data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
- 
+        if( strpos( $cType, 'multipart/form-data') === false ) 
+        {
+             $data = array('response' => 'false', 'msg' => 'Strict use Content-Type application/json or Multipart ' );
+                 return $response
+                        ->withHeader("Content-Type", "application/json")
+                        ->write(json_encode($data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        }   
     }
     return $next($request, $response);    
 });
@@ -58,7 +60,10 @@ $path = [
     "/user/alumn/",
     "/user/teacher/",
     "/user/get/",
+    "/user/getAll/",
     "/user/set/",
+    "/user/groups",
+    "/user/groups/",
     "/resource",
     "/resource/",
     "/notification/",
