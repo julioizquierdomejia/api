@@ -141,7 +141,7 @@ class BookModel extends GeneralConfig
         {
             $this->response->setResponse(false, $e->getMessage());
             return $this->response;
-        }   
+        }
     }
 
     public function getBooksDetailsFromGroup($id_book_group, $json = true)
