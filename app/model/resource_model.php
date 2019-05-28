@@ -111,7 +111,7 @@ class ResourceModel extends GeneralConfig
                     $stm->execute(array($id));
             }
             else{
-                $stm = $this->dbpe->prepare("SELECT r.id, r.code, r.name, r.description, r.id_unity, r.id_book, r.type, r.value, r.page, r.time_band, r.time, r.button_color, r.button_title, r.button_left, r.button_top, r.button_icon, r.head_img_path, r.head_style, r.url, r.text_extra, r.status, r.id_calification_type, r.id_session, qj.score, qj.id_score_letter, qj.date_scored, qj.inserted date_resolved, IF(qj.id > 0, 1, 0) resolved, r.id_class, IF(qj.status is null, 0, qj.status) estatus_evaluate, qj.id question_id, qj.code question_code 
+                $stm = $this->dbpe->prepare("SELECT r.id, r.code, r.name, r.description, r.id_unity, r.id_book, r.type, r.value, r.page, r.time_band, r.time, r.button_color, r.button_title, r.button_left, r.button_top, r.button_icon, r.head_img_path, r.head_style, r.url, r.text_extra, r.status, r.id_calification_type, r.id_session, r.link_book, r.id_category, r.type_assing, r.id_assing, r.schedulle, r.id_schedulle, r.date_on_schedulle, r.date_off_schedulle, r.included_score, qj.score, qj.id_score_letter, qj.date_scored, qj.inserted date_resolved, IF(qj.id > 0, 1, 0) resolved, r.id_class, IF(qj.status is null, 0, qj.status) estatus_evaluate, qj.id question_id, qj.code question_code 
                     FROM $this->table r 
                     LEFT JOIN $this->table_question_join qj on (r.id = qj.id_resource and qj.id_resource = ?) 
                     WHERE r.id = ?");  
@@ -697,7 +697,6 @@ class ResourceModel extends GeneralConfig
 
     public function uploadFiles($data, $iddb, $code)
     {    
- 
 
         if($data == null)
         {
@@ -754,6 +753,7 @@ class ResourceModel extends GeneralConfig
     } 
 
     public function registerUploadResources($id_resource, $code_resource, $id_book, $id_unity, $names, $filesUpload){
+        $this->CleanResourceUpload($id_resource); 
         $saved = 0;
         for($i = 0; $i < count($filesUpload); $i++ ){
            $insert =  $this->refreshUploadBD($id_resource, $id_book . '-' . $id_unity , $names[$i], $filesUpload[$i]);
@@ -772,8 +772,7 @@ class ResourceModel extends GeneralConfig
         }        
     }
 
-    public function refreshUploadBD($id_resource, $folder, $name, $filename){ 
-        $this->CleanResourceUpload($id_resource); 
+    public function refreshUploadBD($id_resource, $folder, $name, $filename){  
         $sql = "INSERT INTO $this->table_upload (id_resource, folder, name, filename, inserted) VALUES (?,?,?,?,?)";
         return $this->dbpe->prepare($sql)
              ->execute(
@@ -907,7 +906,7 @@ class ResourceModel extends GeneralConfig
                 else
                 { 
                     
-                    $this->logger->error("Save Detail Question", $data); 
+                    //$this->logger->error("Save Detail Question", $data); 
                     $this->response->setResponse(false);
                 }
                 return $this->response;

@@ -16,27 +16,33 @@ class SecurityModel extends GeneralConfig
     private $dbpe;
     private $dbpeTemp;
     
-    public function __CONSTRUCT($logger)
+    public function __CONSTRUCT()
     { 
         $this->dbpe = Database::StartUpArea($this->bdbase);
         $this->dbmaster = Database::StartUpMaster();
         $this->response = new Response();
-        $this->logger = $logger;
+        //$this->logger = $logger;
 
         $this->table_master = $this->table_user_master;
         $this->table = $this->table_user; 
     }  
  
-    public function login($data, $options, $uri)
+    public function login($authPair, $options, $uri)
     { 
+        
+
         try
         { 
-            if( isset($data['email']) && isset($data['password']) )
-            {
+            $authPair = base64_decode($authPair);
+            $user_email = explode(":", $authPair)[0];
+            $user_password = explode(":", $authPair)[1];
+
+            if( $user_email !== NULL && $user_email !== '' && $user_password !== NULL && $user_password !== '' )
+            { 
 
                 $resulUserMaster = array(); 
                 $stm = $this->dbmaster->prepare("SELECT * FROM $this->table_master WHERE email = ?");
-                $stm->execute(array(trim($data['email'])));
+                $stm->execute(array(trim($user_email)));
                 $resulUserMaster = $stm->fetchAll();
                 if( count($resulUserMaster) > 0){
                     $bd = $this->bd_base_pe;
@@ -60,8 +66,8 @@ class SecurityModel extends GeneralConfig
                         return $this->response;
                     }  
 
-                    // verify password.
-                    if (!password_verify($data['password'], $user->password)) { 
+                    // verify password. 
+                    if (!password_verify($user_password , $user->password)) { 
                         $this->response->setResponse(false, 'These credentials do not match our records.');
                         return $this->response; 
                     }
@@ -88,7 +94,7 @@ class SecurityModel extends GeneralConfig
         
                     $token = JWT::encode($payload,  $options["secret"], "HS256");    
 
-                    $this->logger->info('User Login', array("user" => $user->level, "sesid" => $sesid) );
+                    //$this->logger->info('User Login', array("user" => $user->level, "sesid" => $sesid) );
                     $this->response->setResponse(true);
                     $this->response->result = ['token' => $token, 'user' => $user ];
                     return $this->response;  
@@ -122,7 +128,7 @@ class SecurityModel extends GeneralConfig
             $amb = $data["amb"]; 
      
 
-            $stm = $this->dbmaster->prepare("SELECT um.id_user_link, s.name name_scholl FROM $this->table_user_master_scholl ums INNER JOIN $this->table_user_master um on ums.id_user_master = um.id INNER JOIN $this->table_scholls s on ums.id_scholl = s.id WHERE ums.id_user_master = ? and s.amb = ?"); 
+            $stm = $this->dbmaster->prepare("SELECT um.id_user_link, s.name name_scholl, s.image, s.image_full, s.web, s.color_primary, s.color_secondary FROM $this->table_user_master_scholl ums INNER JOIN $this->table_user_master um on ums.id_user_master = um.id INNER JOIN $this->table_scholls s on ums.id_scholl = s.id WHERE ums.id_user_master = ? and s.amb = ?"); 
             $stm->execute(array($idm, $amb)); 
             $resultJoinScholl = $stm->fetchAll();  
             $id_user_link = ''; 
@@ -130,7 +136,16 @@ class SecurityModel extends GeneralConfig
             { 
                 $id_user_link = $resultJoinScholl[0]->id_user_link;
                 $this->dbpeTemp = Database::StartUpArea($amb);
-                $stm = $this->dbpeTemp->prepare("SELECT email, first_name, last_name, id 'level',id_type, '".$idm."' idm, '".$amb."' amb, '".$resultJoinScholl[0]->name_scholl."' name_scholl FROM $this->table WHERE id_user_master = ?");
+                $stm = $this->dbpeTemp->prepare("
+                    SELECT email, first_name, last_name, id 'level',id_type, 
+                    '".$idm."' idm, '".$amb."' amb, 
+                    '".$resultJoinScholl[0]->name_scholl."' name_scholl,
+                     '".$resultJoinScholl[0]->image."' image, 
+                     '".$resultJoinScholl[0]->image_full."' image_full, 
+                     '".$resultJoinScholl[0]->web."' web,
+                     '".$resultJoinScholl[0]->color_primary."' color_primary,
+                     '".$resultJoinScholl[0]->color_secondary."' color_secondary 
+                     FROM $this->table WHERE id_user_master = ?");
                 $stm->execute(array($idm)); 
                 $user = $stm->fetchObject();
 
@@ -163,7 +178,7 @@ class SecurityModel extends GeneralConfig
 
                 $token = JWT::encode($payload,  $options["secret"], "HS256");    
 
-                $this->logger->info('User Login', array("user" => $user->level, "sesid" => $sesid) );
+                //$this->logger->info('User Login', array("user" => $user->level, "sesid" => $sesid) );
                 $this->response->setResponse(true);
                 $this->response->result = ['token' => $token, 'user' => $user ];
                 
@@ -197,7 +212,7 @@ class SecurityModel extends GeneralConfig
                 $id_user_link = $resulUserMaster[0]->id_user_link;
                 $id_user_master = $resulUserMaster[0]->id;
 
-                $stm = $this->dbpe->prepare("SELECT email, password, first_name, last_name, id 'level',id_type, id_studystage, id_grade, '".$id_user_master."' idm, '".$bd."' amb, '' name_scholl FROM $this->table WHERE id = ?");
+                $stm = $this->dbpe->prepare("SELECT email, password, first_name, last_name, id 'level',id_type, id_studystage, id_grade, '".$id_user_master."' idm, '".$bd."' amb, '' name_scholl, '' image, '' image_full, 'ebiolibros.com' web, '#2581c5' color_primary, '#fff' color_secondary FROM $this->table WHERE id = ?");
                 $stm->execute(array($id_user_link)); 
                 $user = $stm->fetchObject();
 
@@ -230,7 +245,7 @@ class SecurityModel extends GeneralConfig
 
                 $token = JWT::encode($payload,  $options["secret"], "HS256");    
 
-                $this->logger->info('User Login', array("user" => $user->level, "sesid" => $sesid) );
+                //$this->logger->info('User Login', array("user" => $user->level, "sesid" => $sesid) );
                 $this->response->setResponse(true);
                 $this->response->result = ['token' => $token, 'user' => $user ];
                 

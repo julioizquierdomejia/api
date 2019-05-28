@@ -4,7 +4,7 @@ use App\Model\LearningModel;
 $app->group('/learning/', function () {
     
     $this->get('test', function ($req, $res, $args) {
-        $this->logger->info("_Something interesting happened"); 
+        //$this->logger->info("_Something interesting happened"); 
         return $res->getBody()
                    ->write('Hello Users');
     });
@@ -129,7 +129,194 @@ $app->group('/learning/', function () {
         );
     });  
 
-     $this->get('getAll/evaluation/type', function ($req, $res, $args) {
+    $this->get('getAll/categories/base', function ($req, $res) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"];
+        $lm = new LearningModel($token_data); 
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $lm->GetAllCategoriesBase()
+            )
+        );
+    });
+
+    $this->get('get/categories/base/{id}', function ($req, $res, $args) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"];
+        $lm = new LearningModel($token_data); 
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $lm->GetCategoriesBase($args['id'])
+            )
+        );
+    });
+
+    $this->get('getAll/categories/class', function ($req, $res) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"];
+        $lm = new LearningModel($token_data); 
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $lm->GetAllCategoriesClass()
+            )
+        );
+    });
+
+    $this->get('get/categories/class/{id}', function ($req, $res, $args) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"];
+        $lm = new LearningModel($token_data); 
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $lm->GetCategoriesClass($args['id'])
+            )
+        );
+    });
+
+    $this->get('get/categories/class/byClass/{class_code}', function ($req, $res, $args) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"];
+        $lm = new LearningModel($token_data); 
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $lm->GetCategoriesClassByClass($args['class_code'])
+            )
+        );
+    });
+
+    $this->get('getAll/periods/base', function ($req, $res) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"];
+        $lm = new LearningModel($token_data); 
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $lm->GetAllCategoriesBase()
+            )
+        );
+    });
+
+    $this->get('get/periods/base/{id}', function ($req, $res, $args) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"];
+        $lm = new LearningModel($token_data); 
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $lm->GetPeriodsBase($args['id'])
+            )
+        );
+    });
+
+    $this->get('getAll/periods/base/detail/byPeriod/{id}', function ($req, $res, $args) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"];
+        $lm = new LearningModel($token_data); 
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $lm->GetPeriodsBaseDetailByPeriod($args['id'])
+            )
+        );
+    }); 
+
+    $this->get('getAll/periods/class', function ($req, $res) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"];
+        $lm = new LearningModel($token_data); 
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $lm->GetAllPeriodsClass()
+            )
+        );
+    });
+
+    $this->get('get/periods/class/{id}', function ($req, $res, $args) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"];
+        $lm = new LearningModel($token_data); 
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $lm->GetPeriodsClass($args['id'])
+            )
+        );
+    });
+
+
+
+    $this->get('get/periods/class/byClass/{class_code}', function ($req, $res, $args) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"];
+        $lm = new LearningModel($token_data); 
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $lm->GetPeriodsClassByClass($args['class_code'])
+            )
+        );
+    });
+
+    $this->get('get/periods/class/detail/{id}', function ($req, $res, $args) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"];
+        $lm = new LearningModel($token_data); 
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $lm->GetPeriodsClassDetail($args['id'])
+            )
+        );
+    }); 
+    
+
+    $this->get('getAll/periods/class/detail/byClass/{class_code}', function ($req, $res, $args) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"];
+        $lm = new LearningModel($token_data); 
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $lm->GetPeriodsClassDetailByClass($args['class_code'])
+            )
+        );
+    }); 
+   
+
+
+    $this->get('getAll/evaluation/type', function ($req, $res, $args) {
         $token_data = $req->getAttribute("decoded_token_data")["sub"];
         $lm = new LearningModel($token_data);
         

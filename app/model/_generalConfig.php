@@ -32,6 +32,12 @@ class GeneralConfig
     public $table_book_group = 'book_group_master';
     public $table_users_group = 'users_group';
     public $table_users_group_user = 'users_group_user';
+    public $table_categories_base = 'categories';
+    public $table_categories_class = 'categories_class';
+    public $table_periods_base = 'periods';
+    public $table_periods_class = 'periods_class';
+    public $table_periods_base_detail = 'periods_detail';
+    public $table_periods_class_detail = 'periods_class_detail';
 
     public $table_resources = 'resource';
     public $table_resources_type = 'resource_type';

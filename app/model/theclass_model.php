@@ -423,6 +423,7 @@ class TheClassModel extends GeneralConfig
                                 $cont_success++;
                                 array_push($ids_inserted, $idresponse);
                                 $this->recreateResourcesBase($idresponse, $id_book_temp); 
+                                $this->recreateCategoriesBase($code, $amb); 
                             } 
                         }           
                     }  
@@ -547,6 +548,53 @@ class TheClassModel extends GeneralConfig
             return array("success" => false);
         }
     }
+
+    private function recreateCategoriesBase($class_code, $amb)
+    {
+        try
+        {
+            $categories = array();
+            $id_user = $this->token_data->id;
+            $this->dbpeTemp = Database::StartUpArea($amb); 
+            $stm = $this->dbpeTemp->prepare("SELECT * FROM $this->table_categories_base");      
+            $stm->execute();
+            $categories = $stm->fetchAll(); 
+            $arrayInsert = array();
+
+            $contInsert = 0; 
+
+            foreach ($categories as $row) {   
+               $sql = "INSERT INTO $this->table_categories_class
+                                (name, description, class_code, inserted)
+                                VALUES (?,?,?,?)";
+                    
+                $this->dbpe->prepare($sql)
+                     ->execute(
+                        array( 
+                            $row->name, 
+                            $row->description,
+                            $class_code, 
+                            date('Y-m-d G:H:i')
+                        )
+                    ); 
+                $idresponse = $this->dbpeTemp->lastInsertId();  
+                if($idresponse > 0)
+                {
+                    $contInsert++;
+                }
+            }
+
+            if($contInsert == count($categories)){
+                return array("success" => true, "total" => $contInsert);
+            }  
+
+            return array("success" => false);
+        }
+        catch (Exception $e)
+        {
+            return array("success" => false);
+        }
+    } 
 
     private function registerJoinUserScholl($idm, $id_scholl, $amb, $id_user_link)
     {   

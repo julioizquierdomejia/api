@@ -121,6 +121,18 @@ $app->group('/book/', function () {
             )
         );
     }); 
+
+    $this->get('get/group/{id_group}', function ($req, $res, $args) {
+        $um = new BookModel(); 
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $um->getBooksGroup($args['id_group'])
+            )
+        );
+    });
      
     $this->get('get/group/detail/{id_group}', function ($req, $res, $args) {
         $um = new BookModel(); 

@@ -123,6 +123,27 @@ class BookModel extends GeneralConfig
         }
     }
 
+    public function getBooksGroup($id_book_group)
+    {
+        try
+        {
+            $result = array();
+
+            $stm = $this->dbmaster->prepare("SELECT * FROM $this->table_book_group WHERE id = ?");
+            $stm->execute(array($id_book_group));
+
+            $this->response->setResponse(true);
+            $this->response->result = $stm->fetch();
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }  
+    }
+
     public function getBooksDetailsFromGroup($id_book_group, $json = true)
     { 
         try
@@ -148,6 +169,9 @@ class BookModel extends GeneralConfig
             return array();
         }
     }
+
+    
+
 
     private function getBooksFromGroup($id_book_group)
     {

@@ -83,9 +83,7 @@ class LearningModel extends GeneralConfig
             $this->response->setResponse(false, $e->getMessage());
             return $this->response;
         }
-    }
-
-
+    } 
     
     
     public function GetCompetitios($id)
@@ -183,6 +181,282 @@ class LearningModel extends GeneralConfig
 
             $this->response->setResponse(true);
             $this->response->result = $stm->fetch();
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }  
+    }
+
+    public function GetAllCategoriesBase()
+    {
+        try
+        {
+            $result = array();
+
+            $stm = $this->dbpe->prepare("SELECT * FROM $this->table_categories_base order by name");
+            $stm->execute();
+
+            $this->response->setResponse(true);
+            $this->response->result = $stm->fetchAll();
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }  
+    }
+
+    public function GetCategoriesBase($id)
+    {
+        try
+        {
+            $result = array();
+
+            $stm = $this->dbpe->prepare("SELECT * FROM $this->table_categories_base WHERE id = ?");
+            $stm->execute(array($id));
+
+            $this->response->setResponse(true);
+            $this->response->result = $stm->fetch();
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }  
+    }
+
+    public function GetAllCategoriesClass()
+    {
+        try
+        {
+            $result = array();
+
+            $stm = $this->dbpe->prepare("SELECT * FROM $this->table_categories_class order by name");
+            $stm->execute();
+
+            $this->response->setResponse(true);
+            $this->response->result = $stm->fetchAll();
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }  
+    }
+
+    public function GetCategoriesClass($id)
+    {
+        try
+        {
+            $result = array();
+
+            $stm = $this->dbpe->prepare("SELECT * FROM $this->table_categories_class WHERE id = ?");
+            $stm->execute(array($id));
+
+            $this->response->setResponse(true);
+            $this->response->result = $stm->fetch();
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }  
+    }
+
+    public function GetCategoriesClassByClass($class_code)
+    {
+        try
+        {
+            $result = array(); 
+
+            $stm = $this->dbpe->prepare("SELECT * FROM $this->table_categories_class WHERE class_code = ?");
+            $stm->execute(array($class_code));
+
+            $this->response->setResponse(true);
+            $this->response->result = $stm->fetchAll();
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }  
+    }
+
+    public function GetAllPeriodsBase()
+    {
+        try
+        {
+            $result = array();
+
+            $stm = $this->dbpe->prepare("SELECT * FROM $this->table_periods_base order by name");
+            $stm->execute();
+
+            $this->response->setResponse(true);
+            $this->response->result = $stm->fetchAll();
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }  
+    }
+
+    public function GetPeriodsBase($id)
+    {
+        try
+        {
+            $result = array();
+
+            $stm = $this->dbpe->prepare("SELECT * FROM $this->table_periods_base WHERE id = ?");
+            $stm->execute(array($id));
+
+            $this->response->setResponse(true);
+            $this->response->result = $stm->fetch();
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }  
+    }
+
+    public function GetPeriodsBaseDetailByPeriod($id_period)
+    {
+        try
+        {
+            $result = array();
+
+            $stm = $this->dbpe->prepare("SELECT * FROM $this->table_periods_base_detail order by name");
+            $stm->execute(array($id_period));
+
+
+            $this->response->setResponse(true);
+            $this->response->result = $stm->fetchAll();
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }  
+    }
+
+    // Periodos vinculados a la clase (padre)
+    public function GetAllPeriodsClass()
+    {
+        try
+        {
+            $result = array();
+
+            $stm = $this->dbpe->prepare("SELECT * FROM $this->table_periods_class order by name");
+            $stm->execute();
+
+            $this->response->setResponse(true);
+            $this->response->result = $stm->fetchAll();
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }  
+    }
+
+    public function GetPeriodsClass($id)
+    {
+        try
+        {
+            $result = array();
+
+            $stm = $this->dbpe->prepare("SELECT * FROM $this->table_periods_class WHERE id = ?");
+            $stm->execute(array($id));
+
+            $this->response->setResponse(true);
+            $this->response->result = $stm->fetch();
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }  
+    }
+
+    public function GetPeriodsClassByClass($class_code)
+    {
+        try
+        {
+            $result = array(); 
+
+            $stm = $this->dbpe->prepare("SELECT * FROM $this->table_periods_class WHERE class_code = ?");
+            $stm->execute(array($class_code));
+
+            $this->response->setResponse(true);
+            $this->response->result = $stm->fetchAll();
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }  
+    }
+
+    // Detalle de periodos vinculados a clase
+    public function GetPeriodsClassDetail($id)
+    {
+        try
+        {
+            $result = array();
+
+            $stm = $this->dbpe->prepare("SELECT * FROM $this->table_periods_class_detail WHERE id = ?");
+            $stm->execute(array($id));
+
+            $this->response->setResponse(true);
+            $this->response->result = $stm->fetch();
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }  
+    }
+
+    public function GetPeriodsClassDetailByClass($class_code)
+    {
+        try
+        {
+            $result = array(); 
+
+            $stm = $this->dbpe->prepare("SELECT * FROM $this->table_periods_class_detail WHERE class_code = ?");
+            $stm->execute(array($class_code));
+
+            $this->response->setResponse(true);
+            $this->response->result = $stm->fetchAll();
             
             return $this->response;
         }

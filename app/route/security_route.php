@@ -10,7 +10,7 @@ $app->group('/secure/', function () {
       $url = $req->getHeader('Referer')[0];
       $uriSegments = explode("/", $url); 
     
-      $sm = new SecurityModel($this->logger);
+      $sm = new SecurityModel(); //$this->logger
       $verif = $sm->checkUrlValidTypeUser($token_data, $uriSegments[4]);
       if($verif["valid"])
         return $res->getBody()->write('Hello User is Logged');
@@ -19,12 +19,14 @@ $app->group('/secure/', function () {
                   ->write(json_encode(array("Error" => "Access denied to url", "area_valid" => $verif["area_valid"]), JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT))
                   ->withStatus(500);
     }); 
-    $this->post('login', function ($req, $res) {
+    $this->get('login', function ($req, $res) {
+      $authPair = str_replace("Basic ", "", $req->getHeaderLine("HTTP_AUTHORIZATION") );       
+                
       $options_jwt = $this->get('settings')['jwt']; 
       $uri = $req->getUri(); 
 
       
-      $sm = new SecurityModel($this->logger);
+      $sm = new SecurityModel();
       
       return $res
          ->withHeader('Content-type',  'application/json')
@@ -32,7 +34,7 @@ $app->group('/secure/', function () {
          ->write(
           json_encode(
             $sm->login(
-              $req->getParsedBody(), $options_jwt, $uri
+              $authPair, $options_jwt, $uri
             )
           )
       );
@@ -43,7 +45,7 @@ $app->group('/secure/', function () {
       $options_jwt = $this->get('settings')['jwt']; 
       $uri = $req->getUri(); 
 
-      $sm = new SecurityModel($this->logger);
+      $sm = new SecurityModel();
 
       return $res
          ->withHeader('Content-type', 'application/json')
@@ -63,7 +65,7 @@ $app->group('/secure/', function () {
       $options_jwt = $this->get('settings')['jwt']; 
       $uri = $req->getUri(); 
 
-      $sm = new SecurityModel($this->logger);
+      $sm = new SecurityModel();
 
       return $res
          ->withHeader('Content-type', 'application/json')

@@ -54,7 +54,20 @@ $app->group('/user/', function () {
 
     
 
-    $this->get('getJoinType', function ($req, $res) { 
+    $this->get('getType', function ($req, $res) { 
+      $um = new UserModel();
+      
+      return $res
+         ->withHeader('Content-type', 'application/json')
+         ->getBody()
+         ->write(
+          json_encode(
+            $um->getType()
+          )
+      );
+    });  
+
+      $this->get('getJoinType', function ($req, $res) { 
       $um = new UserModel();
       
       return $res
