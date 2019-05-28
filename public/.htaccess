@@ -1,6 +1,0 @@
-RewriteEngine on
-RewriteRule .* - [env=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-php_value   always_populate_raw_post_data   -1
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule . index.php [L]
