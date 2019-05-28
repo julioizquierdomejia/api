@@ -441,6 +441,7 @@ class ResourceModel extends GeneralConfig
         {
             $id_user = $this->token_data->id;
             $amb = $this->token_data->amb;  
+
             $theClass = array(); 
             $stm = $this->dbpe->prepare("SELECT c.id, c.id_book_group FROM $this->table_class c INNER JOIN $this->table_user_class uc on c.code = uc.code_class WHERE c.code = ? and uc.id_user = ? group by c.code"); 
             $stm->execute(array($class_code,$id_user)); 

@@ -618,7 +618,7 @@ class LearningModel extends GeneralConfig
             $id_user = $this->token_data->id; 
             //var_dump($this->token_data);
             $stm = $this->dbpe ->prepare("
-                SELECT r.id_class, r.name, r.id, r.value, r.page, r.id_session id_session, s.name name_session, s.number number_session
+                SELECT r.code, r.id_class, r.name, r.id, r.value, r.page, r.id_session id_session, s.name name_session, s.number number_session
                 FROM $this->table_resources r
                 INNER JOIN $this->table_class c on r.id_class = c.id 
                 INNER JOIN $this->table_user_class uc on r.id_class = uc.id_class 
@@ -676,7 +676,7 @@ class LearningModel extends GeneralConfig
             $id_teacher = $this->token_data->id; 
             //var_dump($this->token_data);
             $stm = $this->dbpe ->prepare("
-                SELECT r.name, r.id, r.value, r.page, r.id_session id_session, s.name name_session, s.number number_session
+                SELECT r.code, r.name, r.id, r.value, r.page, r.id_session id_session, s.name name_session, s.number number_session
                 FROM $this->table_resources r
                 INNER JOIN $this->table_class c on r.id_class = c.id 
                 LEFT JOIN $this->table_sessions s on r.id_session = s.id
@@ -732,7 +732,7 @@ class LearningModel extends GeneralConfig
             $id_user = $this->token_data->id;  
 
              $stm = $this->dbpe ->prepare("
-                SELECT r.id_class, r.name, r.id, r.value, r.page, r.id_session id_session, s.name name_session, s.number number_session
+                SELECT r.code, r.id_class, r.name, r.id, r.value, r.page, r.id_session id_session, s.name name_session, s.number number_session
                 FROM $this->table_resources r
                 INNER JOIN $this->table_class c on r.id_class = c.id 
                 INNER JOIN $this->table_user_class uc on r.id_class = uc.id_class 
