@@ -121,8 +121,7 @@ class BookModel extends GeneralConfig
         {
             return $this->response;
         }
-    }
-    
+    } 
 
     public function getBooksGroup($id_book_group)
     {
