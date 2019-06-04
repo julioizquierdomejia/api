@@ -78,10 +78,10 @@ $app->group('/resource/', function (){
         );
     });  
 
-    $this->get('byBook/{id}', function ($req, $res, $args) {
+    $this->get('byBook/{id}', function ($req, $res, $args) { 
         $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
         $rm = new ResourceModel($token_data); 
-        
+
         return $res
            ->withHeader('Content-type', 'application/json')
            ->getBody()

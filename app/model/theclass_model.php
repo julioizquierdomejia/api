@@ -24,6 +24,7 @@ class TheClassModel extends GeneralConfig
         $this->response = new Response();
 
         $this->notification = new NotificationModel($token_data);
+        $this->resourcesModel = new ResourceModel($token_data);
 
         $this->table = $this->table_scholls; 
         $this->token_data = $token_data;
@@ -532,7 +533,8 @@ class TheClassModel extends GeneralConfig
                     ); 
                 $idresponse = $this->dbpe->lastInsertId();  
                 if($idresponse > 0)
-                {
+                { 
+                    $this->recreateIndicators($row->id);
                     $contInsert++;
                 }
             }
@@ -542,6 +544,19 @@ class TheClassModel extends GeneralConfig
             }  
 
             return array("success" => false);
+        }
+        catch (Exception $e)
+        {
+            return array("success" => false);
+        }
+    }
+
+    private function recreateIndicators($id_resource)
+    {
+        try
+        {
+             $dataIndicators = $this->resourcesModel->getIndicatorsBase($row->id);
+             $this->resourcesModel->setIndicators($id_resource, $dataIndicators);
         }
         catch (Exception $e)
         {

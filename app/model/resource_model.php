@@ -182,7 +182,42 @@ class ResourceModel extends GeneralConfig
         } 
     }
 
-    public function GetIndicators($id_resource)
+    public function getIndicatorsBase($id_resource_base, $apiResponse = true){
+        try
+        {
+            $result = array(); 
+            $this->dbpeTemp = Database::StartUpArea($this->bd_base_pe);  
+            $stm = $this->dbpeTemp->prepare("SELECT id.id id, id.name name, cp.id id_capacity, cp.name name_capacity, co.id id_competition, co.name name_competition FROM $this->table_join_indicators ji inner join $this->table_indicators id on ji.id_indicator = id.id inner join $this->table_capacitys cp on id.id_capacity = cp.id inner join $this->table_competitions co on cp.id_competition = co.id  WHERE ji.id_resource = ?");
+
+            $stm->execute(array($id_resource));
+
+            if($apiResponse)
+            {
+                $this->response->setResponse(true);
+                $this->response->result = $stm->fetchAll(); 
+                return $this->response;
+            }
+            else
+            {
+                return $stm->fetchAll();
+            }
+            
+        }
+        catch(Exception $e)
+        {
+            if($apiResponse)
+            {
+                $this->response->setResponse(false, $e->getMessage());
+                return $this->response;
+            }
+            else
+            {
+                return false;
+            }
+        }  
+    }
+
+    public function GetIndicators($id_resource, $apiResponse = true)
     {
         try
         {
@@ -191,14 +226,29 @@ class ResourceModel extends GeneralConfig
 
             $stm->execute(array($id_resource));
 
-            $this->response->setResponse(true);
-            $this->response->result = $stm->fetchAll(); 
-            return $this->response;
+            if($apiResponse)
+            {
+                $this->response->setResponse(true);
+                $this->response->result = $stm->fetchAll(); 
+                return $this->response;
+            }
+            else
+            {
+                return $stm->fetchAll();
+            }
+            
         }
         catch(Exception $e)
         {
-            $this->response->setResponse(false, $e->getMessage());
-            return $this->response;
+            if($apiResponse)
+            {
+                $this->response->setResponse(false, $e->getMessage());
+                return $this->response;
+            }
+            else
+            {
+                return false;
+            }
         }  
     }
 
@@ -239,7 +289,7 @@ class ResourceModel extends GeneralConfig
     public function byBook($id_book)
     {
         try
-        {
+        { 
             $result = array(); 
             $stm = $this->dbpe->prepare("SELECT * FROM $this->table WHERE id_book = ? and status = 1"); 
             $stm->execute(array($id_book));
@@ -536,6 +586,7 @@ class ResourceModel extends GeneralConfig
                 if(isset($data['id']))
                 {
 
+                    //var_dump($data);
 
                     $sql = "UPDATE $this->table SET 
                                 code        = ?,
@@ -559,6 +610,8 @@ class ResourceModel extends GeneralConfig
                                 id_class    = ?,
                                 id_session  = ?,
                                 id_calification_type = ?,
+                                id_category = ?,
+                                link_book   = ?,
                                 updated     = ?
                             WHERE id = ?";
                     
@@ -572,7 +625,7 @@ class ResourceModel extends GeneralConfig
                                 $data['id_unity'],
                                 $data['page'],
                                 $data['type'],
-                                ( $data['time_band'] == false || $data['time_band'] == 0 ) ? 0 : 1,
+                                $data['time_band'],
                                 $data['time'], 
                                 $data['button_color'],
                                 $data['button_title'],
@@ -586,6 +639,8 @@ class ResourceModel extends GeneralConfig
                                 $data['id_class'],
                                 ( $data['id_session'] == '' ) ? NULL : $data['id_session'],
                                 $data['id_calification_type'],
+                                $data['id_category'],
+                                $data['link_book'],
                                 date('Y-m-d G:H:i'),
                                 $data['id']
                             )
@@ -595,8 +650,8 @@ class ResourceModel extends GeneralConfig
                 else
                 {
                     $sql = "INSERT INTO $this->table
-                                (code, name, description, id_book, id_unity, page, type, time_band, time, button_color, button_title, button_left, button_top, button_icon, head_img_path, head_style, url, text_extra, id_class, id_session, id_calification_type,id_user, inserted)
-                                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, ?,?)";
+                                (code, name, description, id_book, id_unity, page, type, time_band, time, button_color, button_title, button_left, button_top, button_icon, head_img_path, head_style, url, text_extra, id_class, id_session, id_calification_type, id_category, link_book, id_user, inserted)
+                                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
                     
                     $data['time_band'] = ($data['time_band'] == false) ? 0 : 1;
                     $this->dbpe->prepare($sql)
@@ -623,6 +678,8 @@ class ResourceModel extends GeneralConfig
                                 $data['id_class'],
                                 ( $data['id_session'] == '' ) ? NULL : $data['id_session'],
                                 $data['id_calification_type'],
+                                $data['id_category'],
+                                $data['link_book'],
                                 $id_user,
                                 date('Y-m-d G:H:i')
                             )
@@ -674,23 +731,25 @@ class ResourceModel extends GeneralConfig
 
     public function setIndicators($id_resource, $dataIndicators)
     {
+        $stm = $this->dbpe->prepare("DELETE FROM $this->table_resources_indicator WHERE id_resource = ?");
+        $stm->execute(array($id_resource));
         $count = 0;
         foreach ($dataIndicators as $key => $value) { 
-              $sql = "INSERT INTO $this->table_join_indicators
-                                (id_resource, id_indicator, inserted)
-                                VALUES (?,?,?)"; 
-                    $this->dbpe->prepare($sql)
-                         ->execute(
-                            array( 
-                                $id_resource,
-                                $value['id'],
-                                date('Y-m-d G:H:i')
-                            )
-                        ); 
-                    $idresponse = $this->dbpe->lastInsertId(); 
-                if($idresponse > 0){
-                    $count++;
-                }
+            $sql = "INSERT INTO $this->table_join_indicators
+                            (id_resource, id_indicator, inserted)
+                            VALUES (?,?,?)"; 
+                $this->dbpe->prepare($sql)
+                     ->execute(
+                        array( 
+                            $id_resource,
+                            $value['id'],
+                            date('Y-m-d G:H:i')
+                        )
+                    ); 
+                $idresponse = $this->dbpe->lastInsertId(); 
+            if($idresponse > 0){
+                $count++;
+            }
         }
 
         return $count;
