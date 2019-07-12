@@ -21,6 +21,20 @@ $app->group('/resource/', function (){
             )
         );
     });
+
+    $this->get('type_assing/getAll', function ($req, $res, $args) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
+        $rm = new ResourceModel($token_data); 
+
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $rm->GetAllTypeAssing()
+            )
+        );
+    });
     
     $this->get('activity/getAll', function ($req, $res, $args) {
         $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
@@ -49,6 +63,21 @@ $app->group('/resource/', function (){
             )
         );
     }); 
+
+    $this->get('get/{id}/alumns', function ($req, $res, $args) {
+        $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
+        $rm = new ResourceModel($token_data); 
+
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $rm->GetAlumnsAssing($args['id'])
+            )
+        );
+    });  
+
 
     $this->get('checkHistory/{id}', function ($req, $res, $args) {
         $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
@@ -296,7 +325,7 @@ $app->group('/resource/', function (){
             )
         );
     });
-
+    
 
     $this->get('getAllType', function ($req, $res, $args) {
         $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
@@ -377,20 +406,20 @@ $app->post('/resource/activity', function($req, $res) {
     });
 
 $app->post('/resource/files', function($req, $res) {
-      $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
-      $rm = new ResourceModel($token_data); 
+    $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
+    $rm = new ResourceModel($token_data); 
 
-      return $res
-         ->withHeader('Content-type', 'application/json')
-         ->getBody()
-         ->write(
-          json_encode(
-              $rm->InsertOrUpdate(
-                  $req->getParsedBody()
-              )
-          )
-      );
-    });
+    return $res
+       ->withHeader('Content-type', 'application/json')
+       ->getBody()
+       ->write(
+        json_encode(
+            $rm->InsertOrUpdate(
+                $req->getParsedBody()
+            )
+        )
+    );
+  });
  
 
 $app->post('/resource/activity/question/open', function ($req, $res) { 

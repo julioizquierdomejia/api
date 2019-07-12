@@ -44,6 +44,8 @@ class GeneralConfig
     public $table_resources_upload = 'resource_uploads';
     public $table_resources_indicator = 'resource_indicator';
     public $table_resources_scheduller = 'resource_scheduller';
+    public $table_resources_type_assing = 'resource_type_assing'; 
+    public $table_resources_assing = 'resource_alumn_assing';  
     
     public $table_sessions = 'learn_sessions';
     public $table_competitions = 'competitions';

@@ -427,15 +427,13 @@ class TheClassModel extends GeneralConfig
                                 $this->recreateCategoriesBase($code, $amb); 
                             } 
                         }           
-                    }  
+                    }   
+                }   
 
-                } 
- 
-                
-                if($mode == 'new' && count($ids_inserted) == count($resultBookGroup)){                          
+                if( $mode == 'new' && count($ids_inserted) == count($id_groups_array) ){ 
                     $this->response->result = array('id' =>  $ids_inserted,'code' => $code ); 
                     $this->response->setResponse(true); 
-                }else if($mode == 'edit' && $idresponse > 0){ 
+                }else if( $mode == 'edit' && $idresponse > 0 ){ 
                     $this->response->result = array('id' =>  $idresponse ); 
                     $this->response->setResponse(true); 
                 } 
@@ -555,8 +553,8 @@ class TheClassModel extends GeneralConfig
     {
         try
         {
-             $dataIndicators = $this->resourcesModel->getIndicatorsBase($row->id);
-             $this->resourcesModel->setIndicators($id_resource, $dataIndicators);
+            $dataIndicators = $this->resourcesModel->getIndicatorsBase($id_resource, false);
+            $this->resourcesModel->setIndicators($id_resource, $dataIndicators);
         }
         catch (Exception $e)
         {

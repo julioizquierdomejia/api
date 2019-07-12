@@ -59,6 +59,28 @@ class ResourceModel extends GeneralConfig
 		}
     }
 
+    public function GetAllTypeAssing()
+    {
+        try
+        { 
+            $result = array();
+
+            $stm = $this->dbpe->prepare("SELECT * FROM $this->table_resources_type_assing");
+            $stm->execute();
+            
+            $this->response->setResponse(true);
+            $this->response->result = $stm->fetchAll();
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }
+    }  
+
+
     public function GetAllActivitys()
     {
         try
@@ -105,13 +127,13 @@ class ResourceModel extends GeneralConfig
 			$result = array(); 
 
             if( $this->token_data->amb == $this->bd_base_pe ){
-                $stm = $this->dbpe->prepare("SELECT r.id, r.code, r.name, r.description, r.id_unity, r.id_book, r.type, r.value, r.page, r.time_band, r.time, r.button_color, r.button_title, r.button_left, r.button_top, r.button_icon, r.head_img_path, r.head_style, r.url, r.text_extra, r.status, r.id_calification_type, r.id_session
+                $stm = $this->dbpe->prepare("SELECT r.id, r.code, r.name, r.description, r.id_unity, r.id_book, r.type, r.value, r.page, r.time_band, r.time, r.button_color, r.button_title, r.button_left, r.button_top, r.button_icon, r.head_img_path, r.head_style, r.url, r.text_extra, r.status, r.id_calification_type, r.id_session, r.width, r.height
                     FROM $this->table r  
                     WHERE r.id = ?");  
                     $stm->execute(array($id));
             }
             else{
-                $stm = $this->dbpe->prepare("SELECT r.id, r.code, r.name, r.description, r.id_unity, r.id_book, r.type, r.value, r.page, r.time_band, r.time, r.button_color, r.button_title, r.button_left, r.button_top, r.button_icon, r.head_img_path, r.head_style, r.url, r.text_extra, r.status, r.id_calification_type, r.id_session, r.link_book, r.id_category, r.type_assing, r.id_assing, r.schedulle, r.id_schedulle, r.date_on_schedulle, r.date_off_schedulle, r.included_score, qj.score, qj.id_score_letter, qj.date_scored, qj.inserted date_resolved, IF(qj.id > 0, 1, 0) resolved, r.id_class, IF(qj.status is null, 0, qj.status) estatus_evaluate, qj.id question_id, qj.code question_code 
+                $stm = $this->dbpe->prepare("SELECT r.id, r.code, r.name, r.description, r.id_unity, r.id_book, r.type, r.value, r.page, r.time_band, r.time, r.button_color, r.button_title, r.button_left, r.button_top, r.button_icon, r.head_img_path, r.head_style, r.url, r.text_extra, r.status, r.id_calification_type, r.id_session, r.link_book, r.id_category, r.type_assing, r.id_assing, r.schedulle, r.id_schedulle, r.date_on_schedulle, r.date_off_schedulle, r.included_score, r.width, r.height, qj.score, qj.id_score_letter, qj.date_scored, qj.inserted date_resolved, IF(qj.id > 0, 1, 0) resolved, r.id_class, IF(qj.status is null, 0, qj.status) estatus_evaluate, qj.id question_id, qj.code question_code 
                     FROM $this->table r 
                     LEFT JOIN $this->table_question_join qj on (r.id = qj.id_resource and qj.id_resource = ?) 
                     WHERE r.id = ?");  
@@ -189,7 +211,7 @@ class ResourceModel extends GeneralConfig
             $this->dbpeTemp = Database::StartUpArea($this->bd_base_pe);  
             $stm = $this->dbpeTemp->prepare("SELECT id.id id, id.name name, cp.id id_capacity, cp.name name_capacity, co.id id_competition, co.name name_competition FROM $this->table_join_indicators ji inner join $this->table_indicators id on ji.id_indicator = id.id inner join $this->table_capacitys cp on id.id_capacity = cp.id inner join $this->table_competitions co on cp.id_competition = co.id  WHERE ji.id_resource = ?");
 
-            $stm->execute(array($id_resource));
+            $stm->execute(array($id_resource_base));
 
             if($apiResponse)
             {
@@ -353,7 +375,7 @@ class ResourceModel extends GeneralConfig
             /*var_dump($id_unity);
             var_dump($class_code);*/
             if($class_code == 'base'){ 
-                 $stm = $this->dbpe->prepare("SELECT r.id, r.code, r.name, r.description, r.id_unity, r.id_book, r.type, r.value, r.page, r.time_band, r.time, r.button_color, r.button_title, r.button_left, r.button_top, r.button_icon, r.head_img_path, r.head_style, r.url, r.text_extra, r.status, r.id_calification_type 
+                 $stm = $this->dbpe->prepare("SELECT r.id, r.code, r.name, r.description, r.id_unity, r.id_book, r.type, r.value, r.page, r.time_band, r.time, r.button_color, r.button_title, r.button_left, r.button_top, r.button_icon, r.head_img_path, r.head_style, r.url, r.text_extra, r.status, r.id_calification_type, r.link_book, r.id_category, r.type_assing, r.id_assing, r.width, r.height
                     FROM $this->table r 
                     WHERE r.id_unity = ? and r.status = 1 ORDER BY r.page");  
                 $stm->execute(array($id_unity));
@@ -367,7 +389,7 @@ class ResourceModel extends GeneralConfig
 
                 $id_user = $this->token_data->id; 
                 $result = array(); 
-                $stm = $this->dbpe->prepare("SELECT r.id, r.code, r.name, r.description, r.id_unity, r.id_book, r.type, r.value, r.page, r.time_band, r.time, r.button_color, r.button_title, r.button_left, r.button_top, r.button_icon, r.head_img_path, r.head_style, r.url, r.text_extra, r.status, r.id_calification_type, qj.score, qj.id_score_letter, qj.date_scored, qj.inserted date_resolved, IF(qj.id > 0, 1, 0) resolved, r.id_class, IF(qj.status is null, 0, qj.status) estatus_evaluate, qj.id question_id, qj.code question_code 
+                $stm = $this->dbpe->prepare("SELECT r.id, r.code, r.name, r.description, r.id_unity, r.id_book, r.type, r.value, r.page, r.time_band, r.time, r.button_color, r.button_title, r.button_left, r.button_top, r.button_icon, r.head_img_path, r.head_style, r.url, r.text_extra, r.status, r.id_calification_type, r.link_book, r.id_category, r.type_assing, r.id_assing, r.schedulle, r.date_on_schedulle, r.date_off_schedulle, r.included_score, r.id_period, r.width, r.height, qj.score, qj.id_score_letter, qj.date_scored, qj.inserted date_resolved, IF(qj.id > 0, 1, 0) resolved, r.id_class, IF(qj.status is null, 0, qj.status) estatus_evaluate, qj.id question_id, qj.code question_code 
                     FROM $this->table r 
                     LEFT JOIN $this->table_question_join qj on (r.id = qj.id_resource and qj.id_user = ?) 
                     WHERE r.id_unity = ? and r.status = 1 and r.id_class = ? ORDER BY r.page");  
@@ -376,7 +398,7 @@ class ResourceModel extends GeneralConfig
             } 
 
             foreach ($result as $row) {
-               if( $row->type == '4'){
+               if( $row->type == '4' || $row->type == '6' || $row->type == '7' ){
                     $row->files = $this->getResourseUpload($row->id, false); 
                }
             } 
@@ -467,8 +489,8 @@ class ResourceModel extends GeneralConfig
                                         INNER JOIN $this->table_type rt on r.type = rt.id 
                                         LEFT JOIN $this->table_sessions s on r.id_session = s.id 
                                         LEFT JOIN $this->table_user u on r.id_user = u.id 
-                                        WHERE r.id_unity = ? and r.id_class = ? and r.status = 1 order by r.page");  
-                    $stm->execute(array($id_unity, $id_class)); 
+                                        WHERE r.id_unity = ? and r.id_class = ?  and r.id_book = ? and r.status = 1 order by r.page");  
+                    $stm->execute(array($id_unity, $id_class, $id_book_temp)); 
                     $result = array_merge($result, $stm->fetchAll());
                 }           
             }   
@@ -612,6 +634,9 @@ class ResourceModel extends GeneralConfig
                                 id_calification_type = ?,
                                 id_category = ?,
                                 link_book   = ?,
+                                value       = ?,
+                                width       = ?,
+                                height      = ?,
                                 updated     = ?
                             WHERE id = ?";
                     
@@ -641,6 +666,9 @@ class ResourceModel extends GeneralConfig
                                 $data['id_calification_type'],
                                 $data['id_category'],
                                 $data['link_book'],
+                                $data['value'],
+                                $data['width'],
+                                $data['height'],
                                 date('Y-m-d G:H:i'),
                                 $data['id']
                             )
@@ -650,8 +678,8 @@ class ResourceModel extends GeneralConfig
                 else
                 {
                     $sql = "INSERT INTO $this->table
-                                (code, name, description, id_book, id_unity, page, type, time_band, time, button_color, button_title, button_left, button_top, button_icon, head_img_path, head_style, url, text_extra, id_class, id_session, id_calification_type, id_category, link_book, id_user, inserted)
-                                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                                (code, name, description, id_book, id_unity, page, type, time_band, time, button_color, button_title, button_left, button_top, button_icon, head_img_path, head_style, url, text_extra, id_class, id_session, id_calification_type, id_category, link_book, value, width, height, id_user, inserted)
+                                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
                     
                     $data['time_band'] = ($data['time_band'] == false) ? 0 : 1;
                     $this->dbpe->prepare($sql)
@@ -680,6 +708,9 @@ class ResourceModel extends GeneralConfig
                                 $data['id_calification_type'],
                                 $data['id_category'],
                                 $data['link_book'],
+                                $data['value'],
+                                $data['width'],
+                                $data['height'],
                                 $id_user,
                                 date('Y-m-d G:H:i')
                             )
@@ -687,7 +718,7 @@ class ResourceModel extends GeneralConfig
                     $idresponse = $this->dbpe->lastInsertId();                
                 } 
  
-                if( $data['type'] == '4'){
+                if( $data['type'] == '4' || $data['type'] == '6' || $data['type'] == '7'){
                     return $this->uploadFiles($data, $idresponse, $code);
                 }else{
                     if( $data['indicators_count'] > 0){
@@ -734,7 +765,8 @@ class ResourceModel extends GeneralConfig
         $stm = $this->dbpe->prepare("DELETE FROM $this->table_resources_indicator WHERE id_resource = ?");
         $stm->execute(array($id_resource));
         $count = 0;
-        foreach ($dataIndicators as $key => $value) { 
+        //var_dump($dataIndicators);
+        foreach ( $dataIndicators as $key => $value ) { 
             $sql = "INSERT INTO $this->table_join_indicators
                             (id_resource, id_indicator, inserted)
                             VALUES (?,?,?)"; 
@@ -769,54 +801,57 @@ class ResourceModel extends GeneralConfig
             {
                 if(isset($data['titles']) && $iddb !== null)
                 {   
-                    $myFiles = $_FILES['file']; 
+                    $myFiles = $_FILES['file'];  
                     $id_book = $data['id_book'];
                     $id_unity = $data['id_unity'];
+                    $id_class = $data['id_class'];
                     $titles = $data['titles'];
                     $filesUpload = array();
                     $names = array();
                     $fullpass = true;
                     $total_upload = 0;
-                    $final_path = $this->path_upload_pecontent . $id_book . '-' . $id_unity . '/';
+                    $folder = ($this->token_data->amb == $this->bd_base_pe) ? $id_book . '-' . $id_unity : $id_class;
+                    $final_path = $this->path_upload_pecontent . $folder . '/';
 
                     if (!file_exists($final_path)) {
                         mkdir($final_path, 0777, true);
                     }
 
-                    for($i = 0; $i < count($myFiles['tmp_name']); $i++ ){
-                        $tmp_name = $myFiles['tmp_name'][$i];
-                        $title = $titles[$i];
-                        $name_file = pathinfo($myFiles['name'][$i]);
+                    for($i = 0; $i < count($myFiles['tmp_name']); $i++ ){ 
+                        $tmp_name = $myFiles['tmp_name'][$i]; 
+                        $name_file = pathinfo($myFiles['name'][$i]); 
+                        $title = ( $titles[$i] === null || $titles[$i] == '' ) ? $name_file["filename"] : $titles[$i];
+                        
                         $ext = $name_file['extension'];
                         $codeu = uniqid();
                         $final_name = $code . '-' .  $i . $codeu . '.' . $ext;
-                        if( move_uploaded_file( $tmp_name , $final_path . $final_name ) != false ){  
+                        if( move_uploaded_file( $tmp_name, $final_path . $final_name ) != false ){   
                             array_push($filesUpload, $final_name);
-                            array_push($names, $data['titles'][$i]);
+                            array_push($names, $title);
                             $total_upload++;
                         } else {
                             $fullpass = false; 
                         }
-                    } 
+                    }  
 
-                    return $this->registerUploadResources($iddb, $code, $id_book, $id_unity, $names, $filesUpload);
+                    return $this->registerUploadResources($iddb, $code, $folder, $names, $filesUpload);
                    
                 }
                 else{
-                    $this->response->setResponse(false, 'Error data format ');
+                    $this->response->setResponse(false, 'Error data format '); 
                 } 
             }catch (Exception $e) 
-            {
+            { 
                 $this->response->setResponse(false, $e->getMessage());
             }
         } 
     } 
 
-    public function registerUploadResources($id_resource, $code_resource, $id_book, $id_unity, $names, $filesUpload){
+    public function registerUploadResources($id_resource, $code_resource, $folder,  $names, $filesUpload){
         $this->CleanResourceUpload($id_resource); 
         $saved = 0;
         for($i = 0; $i < count($filesUpload); $i++ ){
-           $insert =  $this->refreshUploadBD($id_resource, $id_book . '-' . $id_unity , $names[$i], $filesUpload[$i]);
+           $insert =  $this->refreshUploadBD($id_resource, $folder , $names[$i], $filesUpload[$i]);
            if($insert){
                 $saved++;
            }
@@ -844,9 +879,10 @@ class ResourceModel extends GeneralConfig
                     date('Y-m-d G:H:i')
                 )
             ); 
-    }
+    } 
 
-    public function CleanResourceUpload($id_resource, $returnFinal = true)
+    
+    public function CleanResourceUpload($id_resource, $apiResponse = true)
     {
         try 
         { 
@@ -866,13 +902,13 @@ class ResourceModel extends GeneralConfig
             
             $this->response->setResponse(true);
 
-            if($returnFinal)
+            if($apiResponse)
                 return $this->response;
             else
                 return true;
         } catch (Exception $e) 
         {
-            if($returnFinal)
+            if($apiResponse)
                 $this->response->setResponse(false, $e->getMessage());
             else
                 return false;
@@ -1580,6 +1616,96 @@ class ResourceModel extends GeneralConfig
         {
             $this->response->setResponse(false, $e->getMessage());
             return $this->response;
+        }
+    }
+
+     public function GetAlumnsAssing($id)
+    {
+        try
+        {
+            $result = array();
+
+            $stm = $this->dbpe->prepare("SELECT * FROM $this->table_resources_assing where id_resource = ?");
+            $stm->execute(array($id));
+            
+            $this->response->setResponse(true);
+            $this->response->result = $stm->fetchAll();
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }
+    }
+
+    public function setAlumnsAssing( $alumns, $id_resource, $id_alumn_group, $id_alumn, $type, $apiResponse ){
+        $this->CleanAlumnAssing($id_resource , false); 
+
+        $saved = 0;
+        for($i = 0; $i < count($alumns); $i++ ){
+           $insert =  $this->assingAlumn($alumns[$i],  $id_resource, $type, $id_alumn_group);
+           if($insert){
+                $saved++;
+           }
+        }
+
+        if($saved == count($alumns)){ 
+            if($apiResponse){
+                $this->response->result = array('total_assing'=> $saved); 
+                $this->response->setResponse(true);  
+                return $this->response;
+            }else{
+                return true;
+            } 
+        }else{
+            if($apiResponse){
+                $this->response->setResponse(false);  
+                return $this->response;
+            }else{
+                return false;
+            }
+        }        
+    }
+
+    public function assingAlumn($alumn, $id_resource, $type, $id_alumn_group){  
+        $id_user = $this->token_data->id;
+        $sql = "INSERT INTO $this->table_resources_assing (id_resource, id_user, type, id_alumn_group, id_user__config, inserted) VALUES (?,?,?,?,?,?)";
+        return $this->dbpe->prepare($sql)
+             ->execute(
+                array(
+                    $id_resource,
+                    $alumn->id,
+                    $type, 
+                    $id_alumn_group,
+                    $id_user,
+                    date('Y-m-d G:H:i')
+                )
+            ); 
+    } 
+    
+
+    public function CleanAlumnAssing($id_resource, $apiResponse = true)
+    {
+        try 
+        { 
+ 
+            $stm = $this->dbpe->prepare("DELETE FROM $this->table_resources_assing WHERE id_resource = ?");   
+            $stm->execute(array($id_resource));
+            
+            $this->response->setResponse(true);
+
+            if($apiResponse)
+                return $this->response;
+            else
+                return true;
+        } catch (Exception $e) 
+        {
+            if($apiResponse)
+                $this->response->setResponse(false, $e->getMessage());
+            else
+                return false;
         }
     }
 }
