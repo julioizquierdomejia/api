@@ -68,6 +68,9 @@ class GeneralConfig
     public $table_question_evaluate = 'activity_question_evaluate';
     public $table_question_evaluate_log = 'activity_question_evaluate_log';
 
+    public $table_admin_menu = 'admin_menu';
+    public $table_group_admin_menu = 'group_admin_menu';
+    public $table_tables_mantenience = 'tables_mantenience';
 
     public $path_upload = '../../lib/media/upload/';
     public $path_imgs_head = '../../lib/media/pe-content/img_head_activity/';   

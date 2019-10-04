@@ -379,4 +379,5 @@ class BookModel extends GeneralConfig
 			$this->response->setResponse(false, $e->getMessage());
 		}
     }
-}
+} 
+

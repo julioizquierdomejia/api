@@ -184,8 +184,8 @@ class SecurityModel extends GeneralConfig
                 
             }
             else
-            {
-                $this->response->setResponse(false);
+            { 
+                $this->response->withStatus(404); 
             }
             return $this->response;  
         }

@@ -22,7 +22,7 @@ $app->group('/admin/', function () {
     });
     
     $this->get('menu/{id}', function ($req, $res, $args) {
-        $um = new BookModel();
+        $um = new AdminModel();
         
         return $res
            ->withHeader('Content-type', 'application/json')
@@ -33,6 +33,60 @@ $app->group('/admin/', function () {
             )
         );
     });
+
+    $this->get('groupmenu', function ($req, $res, $args) {
+        $um = new AdminModel();
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $um->GetAllGroupMenu()
+            )
+        );
+    });
+    
+    $this->get('groupmenu/{id}', function ($req, $res, $args) {
+        $um = new AdminModel();
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $um->GetGroupMenu($args['id'])
+            )
+        );
+    });
+
+    $this->get('tablesmantenience', function ($req, $res, $args) {
+        $um = new AdminModel();
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $um->GetAllTablesMantenience()
+            )
+        );
+    });
+
+    $this->get('tablesmantenience/{id}', function ($req, $res, $args) {
+        $um = new AdminModel();
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $um->GetTableMantenience($args['id'])
+            )
+        );
+    });
+
+    
  
     
 });

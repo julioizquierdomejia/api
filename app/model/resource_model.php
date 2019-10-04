@@ -398,7 +398,7 @@ class ResourceModel extends GeneralConfig
             } 
 
             foreach ($result as $row) {
-               if( $row->type == '4' || $row->type == '6' || $row->type == '7' ){
+               if( $row->type == '4' || $row->type == '6' || $row->type == '7' || $row->type == '11' ){
                     $row->files = $this->getResourseUpload($row->id, false); 
                }
             } 
@@ -717,31 +717,48 @@ class ResourceModel extends GeneralConfig
                         ); 
                     $idresponse = $this->dbpe->lastInsertId();                
                 } 
- 
-                if( $data['type'] == '4' || $data['type'] == '6' || $data['type'] == '7'){
-                    return $this->uploadFiles($data, $idresponse, $code);
+
+                $extraData = array();
+
+                if ( $data['type'] == '4' || $data['type'] == '6' || $data['type'] == '7' || $data['type'] == '11' ) {  
+
+                    $data["id_upload_remove"] = ( isset($data["id_upload_remove"]) ) ? $data["id_upload_remove"] : false;
+                    $data["id_exclude"] = ( isset($data["id_exclude"]) ) ? $data["id_exclude"] : false;
+
+                    if($data["type"] !== "6")
+                        $data["id_upload_remove"] = false;  
+
+                    
+                    if( isset($data["id"]) )
+                        $this->CleanResourceUpload($data["id"], $data["id_upload_remove"], $data["id_exclude"], false); 
+
+                    if( isset( $_FILES['file'] ) ){
+                        $extraData = $this->uploadFiles($data, $idresponse, $code);
+                    }
+                 
                 }else{
                     if( $data['indicators_count'] > 0){
-                        if( $this->setIndicators($idresponse, $data['indicators']) > 0){
-                                $this->response->result = array('id' =>  $idresponse,'code' => $code );
-                                $this->response->setResponse(true);
-                                return $this->response;
+                        if( $this->setIndicators($idresponse, $data['indicators']) > 0 ){
+                            $this->response->result = array('id' =>  $idresponse,'code' => $code );
+                            $this->response->setResponse(true);
+                            return $this->response;
                         }
                     }
+
                     if( $data['is_linked'] == 1 ){
                         $this->removeActiviysJoinLinked($idresponse);
-                    }  
-
-                    if($idresponse > 0){
-                        $this->response->result = array('id' =>  $idresponse,'code' => $code );
-                        $this->response->setResponse(true);
-                        return $this->response;
-                    }else{
-                        $this->response->setResponse(false);
-                        return $this->response;
-                    }
-                    
+                    } 
                 } 
+ 
+
+                if($idresponse > 0){
+                    $this->response->result = array('id' =>  $idresponse,'code' => $code, "upload" => $extraData );
+                    $this->response->setResponse(true);
+                    return $this->response;
+                }else{
+                    $this->response->setResponse(false);
+                    return $this->response;
+                }
                 
             }catch (Exception $e) 
             {
@@ -789,6 +806,8 @@ class ResourceModel extends GeneralConfig
 
     public function uploadFiles($data, $iddb, $code)
     {    
+        
+        //var_dump($data);
 
         if($data == null)
         {
@@ -799,13 +818,19 @@ class ResourceModel extends GeneralConfig
         {   
             try 
             {
-                if(isset($data['titles']) && $iddb !== null)
+                if( $iddb !== null )
                 {   
-                    $myFiles = $_FILES['file'];  
+                    //var_dump("entra 0");
+
+                    $myFiles = ( !isset( $_FILES['file'] ) || $_FILES['file'] === null ) ? array() : $_FILES['file'];  
+                     
+                     /*var_dump(count($myFiles['tmp_name']));
+                     var_dump($myFiles);*/
+
                     $id_book = $data['id_book'];
                     $id_unity = $data['id_unity'];
                     $id_class = $data['id_class'];
-                    $titles = $data['titles'];
+                    $titles = ( !isset( $data['titles'] ) || $data['titles'] === null ) ? '' : $data['titles'];
                     $filesUpload = array();
                     $names = array();
                     $fullpass = true;
@@ -815,12 +840,13 @@ class ResourceModel extends GeneralConfig
 
                     if (!file_exists($final_path)) {
                         mkdir($final_path, 0777, true);
-                    }
+                    }  
 
                     for($i = 0; $i < count($myFiles['tmp_name']); $i++ ){ 
+
                         $tmp_name = $myFiles['tmp_name'][$i]; 
                         $name_file = pathinfo($myFiles['name'][$i]); 
-                        $title = ( $titles[$i] === null || $titles[$i] == '' ) ? $name_file["filename"] : $titles[$i];
+                        $title = ( $titles == '' ) ? $name_file["filename"] : $titles[$i];
                         
                         $ext = $name_file['extension'];
                         $codeu = uniqid();
@@ -832,10 +858,11 @@ class ResourceModel extends GeneralConfig
                         } else {
                             $fullpass = false; 
                         }
-                    }  
+                    }   
 
-                    return $this->registerUploadResources($iddb, $code, $folder, $names, $filesUpload);
-                   
+                    return $this->registerUploadResources($iddb, $code, $folder, $names, $filesUpload, $data["id_upload_remove"] );
+                     
+                    
                 }
                 else{
                     $this->response->setResponse(false, 'Error data format '); 
@@ -847,23 +874,26 @@ class ResourceModel extends GeneralConfig
         } 
     } 
 
-    public function registerUploadResources($id_resource, $code_resource, $folder,  $names, $filesUpload){
-        $this->CleanResourceUpload($id_resource); 
+    public function registerUploadResources($id_resource, $code_resource, $folder,  $names, $filesUpload, $id_upload_remove = false){
+
+        //var_dump($id_upload_remove); 
         $saved = 0;
+        $ids_uploads = array();
         for($i = 0; $i < count($filesUpload); $i++ ){
-           $insert =  $this->refreshUploadBD($id_resource, $folder , $names[$i], $filesUpload[$i]);
+           $insert =  $this->refreshUploadBD($id_resource, $folder , $names[$i], $filesUpload[$i]); 
            if($insert){
                 $saved++;
+                $ids_uploads[$i] = $this->dbpe->lastInsertId();
            }
         }
 
         if($saved == count($filesUpload)){
-            $this->response->result = array('id' =>  $id_resource,'code' => $code_resource , 'total_upload'=> $saved); 
+            //$this->response->result = array('id' =>  $id_resource,'code' => $code_resource , 'total_upload'=> $saved); 
             $this->response->setResponse(true);  
-            return $this->response;
+            return array('id' =>  $id_resource, 'id_upload' => $ids_uploads, 'code' => $code_resource , 'total_upload'=> $saved); //$this->response;
         }else{
             $this->response->setResponse(false);  
-            return $this->response;
+            return array('total_upload' => $saved); //$this->response;
         }        
     }
 
@@ -882,7 +912,7 @@ class ResourceModel extends GeneralConfig
     } 
 
     
-    public function CleanResourceUpload($id_resource, $apiResponse = true)
+    public function CleanResourceUpload($id_resource,  $id_upload_remove = false,  $id_upload_exclude = false, $apiResponse = true )
     {
         try 
         { 
@@ -897,8 +927,35 @@ class ResourceModel extends GeneralConfig
                 } 
             }
 
-            $stm = $this->dbpe->prepare("DELETE FROM $this->table_upload WHERE id_resource = ?");   
-            $stm->execute(array($id_resource));
+            //var_dump("pre1");
+
+            $full = true;
+ 
+            if( $id_upload_remove !== false && count($id_upload_remove) > 0 ){
+                //var_dump("pre2");
+                $full = false;
+                for ($i = 0; $i < count( $id_upload_remove ); $i++ ) {
+                    //var_dump("each for $i");
+                    $id_upload = $id_upload_remove[$i];
+                    $stm = $this->dbpe->prepare("DELETE FROM $this->table_upload WHERE id_resource = ? and id in (?) ");                   
+                    $stm->execute(array($id_resource, $id_upload));
+                }
+            }
+
+            if( $id_upload_exclude !== false && count($id_upload_exclude) > 0 ){
+                $full = false;
+                for ($i = 0; $i < count( $id_upload_exclude ); $i++ ) {
+                    $id_upload = $id_upload_exclude[$i];
+                    $stm = $this->dbpe->prepare("DELETE FROM $this->table_upload WHERE id_resource = ? and id not in (?) ");                   
+                    $stm->execute(array($id_resource, $id_upload));
+                }
+            } 
+
+            if( $full ){
+                $stm = $this->dbpe->prepare("DELETE FROM $this->table_upload WHERE id_resource = ?");   
+                $stm->execute(array($id_resource));
+            }
+           
             
             $this->response->setResponse(true);
 
@@ -914,6 +971,8 @@ class ResourceModel extends GeneralConfig
                 return false;
         }
     }
+
+
 
     public function SaveQuestion($data){
         if($data == null)
