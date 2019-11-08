@@ -73,6 +73,12 @@ class GeneralConfig
     public $table_tables_mantenience = 'tables_mantenience';
 
     public $path_upload = '../../lib/media/upload/';
+    public $path_content = '../../lib/media/content/';
+    public $path_units = '../../lib/media/content/books/';
+    public $path_covers = '../../lib/media/content/covers/';
+    public $path_covers3d = '../../lib/media/content/covers_3d/';
+    public $path_sessions = '../../lib/media/content/sessions/';
+    
     public $path_imgs_head = '../../lib/media/pe-content/img_head_activity/';   
 
     public $path_upload_pecontent = '../../lib/media/pe-content/upload/';

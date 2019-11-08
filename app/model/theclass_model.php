@@ -491,15 +491,15 @@ class TheClassModel extends GeneralConfig
             $stm = $this->dbpeTemp->prepare("SELECT * FROM $this->table_resources WHERE id_book = ?");                   
             $stm->execute(array($id_book));
             $resources = $stm->fetchAll(); 
+            //var_dump($resources);
             $arrayInsert = array();
-
             $contInsert = 0;
 
             $this->dbpeTemp = Database::StartUpArea($this->token_data->amb); 
             foreach ($resources as $row) {   
                $sql = "INSERT INTO $this->table_resources
-                                (code, name, description, id_book, id_unity, page, type, time_band, time, button_color, button_title, button_left, button_top, button_icon, head_img_path, head_style, url, text_extra, id_class, id_session, id_calification_type, id_user, inserted)
-                                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                                (code, name, description, id_book, id_unity, page, type, time_band, time, button_color, button_title, button_left, button_top, button_icon, head_img_path, head_style, url, text_extra, id_class, id_session, id_calification_type, link_book, width, height, id_category, value, id_user, inserted)
+                                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
                     
                 $this->dbpe->prepare($sql)
                      ->execute(
@@ -525,6 +525,11 @@ class TheClassModel extends GeneralConfig
                             $id_class,
                             $row->id_session,
                             $row->id_calification_type,
+                            $row->link_book, 
+                            $row->width,
+                            $row->height,
+                            $row->id_category,
+                            $row->value,
                             $id_user,
                             date('Y-m-d G:H:i')
                         )
@@ -533,6 +538,7 @@ class TheClassModel extends GeneralConfig
                 if($idresponse > 0)
                 { 
                     $this->recreateIndicators($row->id);
+                    $this->recreateUploads($row, $id_class, $idresponse);
                     $contInsert++;
                 }
             }
@@ -555,6 +561,27 @@ class TheClassModel extends GeneralConfig
         {
             $dataIndicators = $this->resourcesModel->getIndicatorsBase($id_resource, false);
             $this->resourcesModel->setIndicators($id_resource, $dataIndicators);
+        }
+        catch (Exception $e)
+        {
+            return array("success" => false);
+        }
+    }
+
+    private function recreateUploads($resource , $id_class, $id_resource)
+    { 
+        try
+        { 
+            if ( $resource->type == '4' || $resource->type == '6' || $resource->type == '7' || $resource->type == '11' ) { 
+                $ru = $this->resourcesModel->getResourseUpload($resource->id, false, true);  
+                foreach ($ru as $r) {
+                    $this->resourcesModel->refreshUploadBD($id_resource, $id_class, $r->name, $r->filename); 
+                    if (!file_exists($this->path_upload_pecontent . $id_class . "/")) {
+                        mkdir($this->path_upload_pecontent . $id_class . "/", 0777, true);
+                    }
+                    copy( $this->path_upload_pecontent . $r->folder . "/" . $r->filename, $this->path_upload_pecontent . $id_class . "/" . $r->filename);
+                }
+            }
         }
         catch (Exception $e)
         {

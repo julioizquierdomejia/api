@@ -279,9 +279,15 @@ class LearningModel extends GeneralConfig
     {
         try
         {
-            $result = array(); 
+            $result = array();  
 
-            $stm = $this->dbpe->prepare("SELECT * FROM $this->table_categories_class WHERE class_code = ?");
+            if( $class_code == 'base') {
+                $stm = $this->dbpe->prepare("SELECT * FROM $this->table_categories_base order by id");
+            }else{
+                $stm = $this->dbpe->prepare("SELECT * FROM $this->table_categories_class WHERE class_code = ?");
+            } 
+
+            
             $stm->execute(array($class_code));
 
             $this->response->setResponse(true);

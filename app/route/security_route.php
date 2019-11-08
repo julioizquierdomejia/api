@@ -11,9 +11,12 @@ $app->group('/secure/', function () {
       $uriSegments = explode("/", $url); 
     
       $sm = new SecurityModel(); //$this->logger
-      $verif = $sm->checkUrlValidTypeUser($token_data, $uriSegments[4]);
+      $verif = $sm->checkUrlValidTypeUser($token_data, $uriSegments[4]); 
+
       if($verif["valid"])
-        return $res->getBody()->write('Hello User is Logged');
+        return $res->withHeader("Content-Type", "application/json")
+                  ->write(json_encode(array("text" => "User Logged :D", "success" => true, "token" => $token_data), JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT))
+                  ->withStatus(200);
       else
         return $res->withHeader("Content-Type", "application/json")
                   ->write(json_encode(array("Error" => "Access denied to url", "area_valid" => $verif["area_valid"]), JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT))

@@ -86,7 +86,89 @@ $app->group('/admin/', function () {
         );
     });
 
-    
- 
+    $this->get('tablesmantenience/byCode/{code}', function ($req, $res, $args) {
+        $um = new AdminModel();
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $um->GetTableMantenienceByCode($args['code'])
+            )
+        );
+    });
+  
+    $this->get('getTableData/{code}', function ($req, $res, $args) {
+        $um = new AdminModel();
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $um->GetTableData($args['code'])
+            )
+        );
+    });
+
+    $this->get('getTableData/{code}/{id}', function ($req, $res, $args) {
+        $um = new AdminModel();
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $um->GetTableDataEdit( $args['code'], $args['id'] )
+            )
+        );
+    }); 
+
+    $this->get('fileExists/{type}/{code}/{name}', function ($req, $res, $args) {
+        $um = new AdminModel();
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $um->fileExists( $args['type'] , $args['code'], $args['name'] )
+            )
+        );
+    }); 
     
 });
+
+
+$app->post('/admin/save', function ($req, $res) {
+    $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
+    $am = new AdminModel($token_data); 
+
+    return $res
+       ->withHeader('Content-type', 'application/json')
+       ->getBody()
+       ->write(
+        json_encode(
+            $am->InsertOrUpdate(
+                $req->getParsedBody()
+            )
+        )
+    );
+});
+
+$app->post('/admin/media', function($req, $res) {
+    $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
+    $am = new AdminModel($token_data);  
+
+    return $res
+       ->withHeader('Content-type', 'application/json')
+       ->getBody()
+       ->write(
+        json_encode(
+            $am->uploadMedia(
+                $req->getParsedBody()
+            )
+        )
+    );
+  });

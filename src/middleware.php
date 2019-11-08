@@ -85,7 +85,9 @@ $path = [
     "/pe/codesBIC/generate",
     "/pe/codesBIC/get/",
     "/pe/codesBIC/enabledchange",
-    "/pe/codesBIC/delete/"
+    "/pe/codesBIC/delete/",
+    "/admin",
+    "/book/save"
 ];
 
 $app->add(new \Tuupola\Middleware\JwtAuthentication([

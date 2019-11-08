@@ -68,9 +68,14 @@ class Database {
     	}
 
 		if( trim($_SERVER['SERVER_NAME']) == 'localhost' || trim($_SERVER['SERVER_NAME']) == '192.168.1.90' ){
-			$bd = 'ebiolibr_' . $area;
+			if($area == 'data'){
+				$bd = 'ebiope';
+			}else{
+				$bd = 'ebiolibr_' . $area; 
+			}
 			$user = 'root';
 			$pass = '';
+			
 		}else{
 			$bd = 'ebiolibr_' . $area;
 			$user = 'ebiolibr_master';

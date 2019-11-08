@@ -287,19 +287,35 @@ class SecurityModel extends GeneralConfig
 
     public function checkUrlValidTypeUser($token_data, $url_type)
     { 
-        $type_token = ($token_data->type == '1') ? "estudiante" : "docente";
-        if(trim($url_type) != 'docente' || trim($url_type) != 'estudiante')
+
+        if( $token_data->type == "1" ){
+        	$type_token = "estudiante";
+        }
+        else if( $token_data->type == "2" ){
+        	$type_token = "docente";
+        }
+        else if( $token_data->type == "3" ){
+        	$type_token = "admin";
+        }
+        else if( $token_data->type == "4" ){
+        	$type_token = "tutor";
+        }
+        else if( $token_data->type == "5" ){
+        	$type_token = "coordinador";
+        }  
+
+        if(trim($url_type) != 'docente' && trim($url_type) != 'estudiante' && trim($url_type) != 'admin')
         {
             return array("valid" => true);
         }
-        
+ 
         if( trim($type_token) == trim($url_type) )
         {
             return array("valid" => true);
         }
         else
         {
-            return array("valid" => false, "" => $type_token);
+            return array("valid" => false, "area_valid" => $type_token);
         }
     }
 

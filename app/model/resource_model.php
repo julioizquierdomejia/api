@@ -161,14 +161,19 @@ class ResourceModel extends GeneralConfig
 		}  
     }
 
-    public function getResourseUpload($id_resource, $apiResponse = true)
+    public function getResourseUpload($id_resource, $apiResponse = true, $ambBase = false)
     { 
         try
-        {
+        { 
             $result = array(); 
-            $stm = $this->dbpe->prepare("SELECT * FROM $this->table_upload WHERE id_resource = ?"); 
+            if($ambBase){
+                $this->dbpeTemp = Database::StartUpArea($this->bd_base_pe);  
+                $stm = $this->dbpeTemp->prepare("SELECT * FROM $this->table_upload WHERE id_resource = ?"); 
+            }else{
+                $stm = $this->dbpe->prepare("SELECT * FROM $this->table_upload WHERE id_resource = ?"); 
+            } 
             $stm->execute(array($id_resource)); 
-            $result = $stm->fetchAll();
+            $result = $stm->fetchAll(); 
 
             if($apiResponse){
                 $this->response->setResponse(true);
@@ -375,7 +380,7 @@ class ResourceModel extends GeneralConfig
             /*var_dump($id_unity);
             var_dump($class_code);*/
             if($class_code == 'base'){ 
-                 $stm = $this->dbpe->prepare("SELECT r.id, r.code, r.name, r.description, r.id_unity, r.id_book, r.type, r.value, r.page, r.time_band, r.time, r.button_color, r.button_title, r.button_left, r.button_top, r.button_icon, r.head_img_path, r.head_style, r.url, r.text_extra, r.status, r.id_calification_type, r.link_book, r.id_category, r.type_assing, r.id_assing, r.width, r.height
+                 $stm = $this->dbpe->prepare("SELECT r.id, r.code, r.name, r.description, r.id_unity, r.id_book, r.type, r.value, r.page, r.time_band, r.time, r.button_color, r.button_title, r.button_left, r.button_top, r.button_icon, r.head_img_path, r.head_style, r.url, r.text_extra, r.status, r.id_calification_type, r.link_book, r.id_category, r.width, r.height
                     FROM $this->table r 
                     WHERE r.id_unity = ? and r.status = 1 ORDER BY r.page");  
                 $stm->execute(array($id_unity));
@@ -492,6 +497,7 @@ class ResourceModel extends GeneralConfig
                                         WHERE r.id_unity = ? and r.id_class = ?  and r.id_book = ? and r.status = 1 order by r.page");  
                     $stm->execute(array($id_unity, $id_class, $id_book_temp)); 
                     $result = array_merge($result, $stm->fetchAll());
+
                 }           
             }   
 
@@ -590,9 +596,14 @@ class ResourceModel extends GeneralConfig
             return $this->response;
         }  
     }
-    
+
     public function InsertOrUpdate($data)
     {     
+
+        if($data["id_class"] == null or $data["id_class"] == ''){
+            return $this->InsertOrUpdateBase($data);
+        }
+
         $id_user = $this->token_data->id;
         $amb = $this->token_data->amb;
         if( $data == null ) 
@@ -724,9 +735,7 @@ class ResourceModel extends GeneralConfig
 
                     $data["id_upload_remove"] = ( isset($data["id_upload_remove"]) ) ? $data["id_upload_remove"] : false;
                     $data["id_exclude"] = ( isset($data["id_exclude"]) ) ? $data["id_exclude"] : false;
-
-                    if($data["type"] !== "6")
-                        $data["id_upload_remove"] = false;  
+                    $data["id_upload_remove"] = false;  
 
                     
                     if( isset($data["id"]) )
@@ -767,6 +776,179 @@ class ResourceModel extends GeneralConfig
             }
         } 
     }
+    
+    public function InsertOrUpdateBase($data)
+    {     
+        $id_user = $this->token_data->id;
+        $amb = $this->token_data->amb;
+        if( $data == null ) 
+        {
+            $this->response->setResponse(false, "Error, no data");
+            return $this->response;
+        }
+        else
+        {
+            $code = uniqid();
+            try 
+            {
+                if(isset($data['id']))
+                {
+
+                    //var_dump($data);
+
+                    $sql = "UPDATE $this->table SET 
+                                code        = ?,
+                                name        = ?, 
+                                description = ?,
+                                id_book     = ?,
+                                id_unity    = ?,
+                                page        = ?,
+                                type        = ?,
+                                time_band   = ?,
+                                time        = ?, 
+                                button_color= ?, 
+                                button_title= ?, 
+                                button_left = ?, 
+                                button_top  = ?, 
+                                button_icon = ?,
+                                head_img_path  = ?, 
+                                head_style  = ?, 
+                                url         = ?,
+                                text_extra  = ?, 
+                                id_session  = ?,
+                                id_calification_type = ?,
+                                id_category = ?,
+                                link_book   = ?,
+                                value       = ?,
+                                width       = ?,
+                                height      = ?,
+                                updated     = ?
+                            WHERE id = ?";
+                    
+                    $this->dbpe->prepare($sql)
+                         ->execute(
+                            array(
+                                $code,
+                                $data['name'], 
+                                $data['description'],
+                                $data['id_book'],
+                                $data['id_unity'],
+                                $data['page'],
+                                $data['type'],
+                                $data['time_band'],
+                                $data['time'], 
+                                $data['button_color'],
+                                $data['button_title'],
+                                $data['button_left'],
+                                $data['button_top'],
+                                $data['button_icon'], 
+                                $data['head_img_path'],   
+                                $data['head_style'],
+                                $data['url'],
+                                $data['text_extra'], 
+                                ( $data['id_session'] == '' ) ? NULL : $data['id_session'],
+                                $data['id_calification_type'],
+                                $data['id_category'],
+                                $data['link_book'],
+                                $data['value'],
+                                $data['width'],
+                                $data['height'],
+                                date('Y-m-d G:H:i'),
+                                $data['id']
+                            )
+                        );
+                    $idresponse = $data['id'];
+                }
+                else
+                {
+                    $sql = "INSERT INTO $this->table
+                                (code, name, description, id_book, id_unity, page, type, time_band, time, button_color, button_title, button_left, button_top, button_icon, head_img_path, head_style, url, text_extra, id_session, id_calification_type, id_category, link_book, value, width, height, id_user, inserted)
+                                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                    
+                    $data['time_band'] = ($data['time_band'] == false) ? 0 : 1;
+                    $this->dbpe->prepare($sql)
+                         ->execute(
+                            array(
+                                $code,
+                                $data['name'], 
+                                $data['description'],
+                                $data['id_book'],
+                                $data['id_unity'],
+                                $data['page'],
+                                $data['type'],
+                                $data['time_band'],
+                                $data['time'],
+                                $data['button_color'],
+                                $data['button_title'],
+                                $data['button_left'],
+                                $data['button_top'],
+                                $data['button_icon'],   
+                                $data['head_img_path'],   
+                                $data['head_style'],
+                                $data['url'],
+                                $data['text_extra'], 
+                                ( $data['id_session'] == '' ) ? NULL : $data['id_session'],
+                                $data['id_calification_type'],
+                                $data['id_category'],
+                                $data['link_book'],
+                                $data['value'],
+                                $data['width'],
+                                $data['height'],
+                                $id_user,
+                                date('Y-m-d G:H:i')
+                            )
+                        ); 
+                    $idresponse = $this->dbpe->lastInsertId();                
+                } 
+
+                $extraData = array();
+
+                if ( $data['type'] == '4' || $data['type'] == '6' || $data['type'] == '7' || $data['type'] == '11' ) {  
+
+                    $data["id_upload_remove"] = ( isset($data["id_upload_remove"]) ) ? $data["id_upload_remove"] : false;
+                    $data["id_exclude"] = ( isset($data["id_exclude"]) ) ? $data["id_exclude"] : false;
+                    $data["id_upload_remove"] = false;  
+
+                    
+                    if( isset($data["id"]) )
+                        $this->CleanResourceUpload($data["id"], $data["id_upload_remove"], $data["id_exclude"], false); 
+
+                    if( isset( $_FILES['file'] ) ){
+                        $extraData = $this->uploadFiles($data, $idresponse, $code);
+                    }
+                 
+                }else{
+                    if( $data['indicators_count'] > 0){
+                        if( $this->setIndicators($idresponse, $data['indicators']) > 0 ){
+                            $this->response->result = array('id' =>  $idresponse,'code' => $code );
+                            $this->response->setResponse(true);
+                            return $this->response;
+                        }
+                    }
+
+                    if( $data['is_linked'] == 1 ){
+                        $this->removeActiviysJoinLinked($idresponse);
+                    } 
+                } 
+ 
+
+                if($idresponse > 0){
+                    $this->response->result = array('id' =>  $idresponse,'code' => $code, "upload" => $extraData );
+                    $this->response->setResponse(true);
+                    return $this->response;
+                }else{
+                    $this->response->setResponse(false);
+                    return $this->response;
+                }
+                
+            }catch (Exception $e) 
+            {
+                $this->response->setResponse(false, $e->getMessage());
+                return $this->response;
+            }
+        } 
+    } 
+
 
     public function removeActiviysJoinLinked($id_resource)
     {
@@ -829,7 +1011,7 @@ class ResourceModel extends GeneralConfig
 
                     $id_book = $data['id_book'];
                     $id_unity = $data['id_unity'];
-                    $id_class = $data['id_class'];
+                    $id_class = ( $data['id_class'] !== null && $data['id_class'] ) ? $data['id_class'] : '';
                     $titles = ( !isset( $data['titles'] ) || $data['titles'] === null ) ? '' : $data['titles'];
                     $filesUpload = array();
                     $names = array();

@@ -34,7 +34,7 @@ $app->group('/grade/', function () {
         );
     });
 
-    $this->get('byStage/{id}', function ($req, $res, $args) {
+    $this->get('bySerie/{id}', function ($req, $res, $args) {
         $um = new GradeModel();
         
         return $res
@@ -42,10 +42,12 @@ $app->group('/grade/', function () {
            ->getBody()
            ->write(
             json_encode(
-                $um->byStage($args['id'])
+                $um->bySerie($args['id'])
             )
         );
     }); 
+
+    
     
     $this->post('save', function ($req, $res) {
         $um = new GradeModel();

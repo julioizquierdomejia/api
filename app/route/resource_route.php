@@ -419,7 +419,7 @@ $app->post('/resource/files', function($req, $res) {
             )
         )
     );
-  });
+  }); 
  
 
 $app->post('/resource/activity/question/open', function ($req, $res) { 

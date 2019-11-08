@@ -4,11 +4,10 @@ namespace App\Model;
 use App\Lib\Database;
 use App\Lib\Response;
 
-class GradeModel
+class GradeModel extends GeneralConfig
 {
     private $db;
-    private $table = 'grade';
-    private $response;
+    private $table = 'grade'; 
     
     public function __CONSTRUCT()
     {
@@ -22,7 +21,7 @@ class GradeModel
 		{
 			$result = array();
 
-			$stm = $this->db->prepare("SELECT * FROM $this->table");
+			$stm = $this->db->prepare("SELECT g.id, g.name, ss.name stage FROM $this->table g INNER JOIN $this->table_studystage ss on g.id_studystage = ss.id");
 			$stm->execute();
             
 			$this->response->setResponse(true);
@@ -64,6 +63,30 @@ class GradeModel
             $result = array(); 
             $stm = $this->db->prepare("SELECT * FROM $this->table WHERE id_studystage = ?"); 
             $stm->execute(array($id_studystage));
+
+            $this->response->setResponse(true);
+            $this->response->result = $stm->fetchAll();
+            
+            return $this->response;
+        }
+        catch(Exception $e)
+        {
+            $this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+        }  
+    }
+
+    public function bySerie($id_serie)
+    {
+        try
+        {
+            $result = array();  
+            $stm = $this->db->prepare("SELECT g.id, g.name, s.id id_studystage, s.name name_serie, ss.name name_studystage 
+                                        FROM $this->table g 
+                                        INNER JOIN $this->table_serie s on g.id_studystage = s.id_stage
+                                        INNER JOIN $this->table_studystage ss on g.id_studystage = ss.id
+                                        WHERE s.id = ?"); 
+            $stm->execute(array($id_serie));
 
             $this->response->setResponse(true);
             $this->response->result = $stm->fetchAll();

@@ -315,12 +315,19 @@ class BookModel extends GeneralConfig
             if(isset($data['id']))
             {
                 $sql = "UPDATE $this->table SET 
-                            code            = ?, 
-                            name            = ?,
-                            description     = ?,
-                            unitys_number   = ?,
-                            grade_id        = ?,
-                            updated         = ?,
+                            code                    = ?, 
+                            name                    = ?,
+                            description             = ?,
+                            unitys_number           = ?,
+                            id_grade                = ?,
+                            id_serie                = ?,
+                            price_public            = ?,
+                            type                    = ?,
+                            unity_demo              = ?,
+                            format                  = ?,
+                            slider_active           = ?,
+                            id_type_calification    = ?,
+                            updated                 = ?
                         WHERE id = ?";
                 
                 $this->db->prepare($sql)
@@ -330,26 +337,40 @@ class BookModel extends GeneralConfig
                             $data['name'],
                             $data['description'],
                             $data['unitys_number'],
-                            $data['grade_id'],
-                            $data['id'],
-                            date('Y-m-d G:H:i')
+                            $data['id_grade'],
+                            $data['id_serie'],
+                            $data['price_public'],
+                            $data['type'],
+                            $data['unity_demo'],
+                            $data['format'],
+                            $data['slider_active'],
+                            $data['id_type_calification'], 
+                            date('Y-m-d G:H:i'),
+                            $data['id']
                         )
                     );
             }
             else
             {
                 $sql = "INSERT INTO $this->description
-                            (code, name, description, number_unity, grade, inserted)
-                            VALUES (?,?,?,?,?,?)";
+                            (code, name, description, unitys_number, id_grade, id_serie, price_public, type, unity_demo, format, slider_active, id_type_calification, inserted)
+                            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
                 
                 $this->db->prepare($sql)
-                     ->execute(
+                     ->execute(  
                         array(
                             $data['code'], 
                             $data['name'],
                             $data['description'],
                             $data['unitys_number'],
-                            $data['grade_id'],
+                            $data['id_grade'],
+                            $data['id_serie'],
+                            $data['price_public'],
+                            $data['type'],
+                            $data['unity_demo'],
+                            $data['format'],
+                            $data['slider_active'],
+                            $data['id_type_calification'],
                             date('Y-m-d G:H:i')
                         )
                     ); 

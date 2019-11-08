@@ -144,22 +144,7 @@ $app->group('/book/', function () {
                 $um->getBooksDetailsFromGroup($args['id_group'])
             )
         );
-    });
-    
-    $this->post('save', function ($req, $res) {
-        $um = new BookModel();
-        
-        return $res
-           ->withHeader('Content-type', 'application/json')
-           ->getBody()
-           ->write(
-            json_encode(
-                $um->InsertOrUpdate(
-                    $req->getParsedBody()
-                )
-            )
-        );
-    });
+    }); 
     
     $this->post('delete/{id}', function ($req, $res, $args) {
         $um = new BookModel();
@@ -174,4 +159,20 @@ $app->group('/book/', function () {
         );
     });
     
+});
+
+$app->post('/book/save', function ($req, $res) {
+    $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
+    $bm = new BookModel($token_data); 
+
+    return $res
+       ->withHeader('Content-type', 'application/json')
+       ->getBody()
+       ->write(
+        json_encode(
+            $bm->InsertOrUpdate(
+                $req->getParsedBody()
+            )
+        )
+    );
 });
