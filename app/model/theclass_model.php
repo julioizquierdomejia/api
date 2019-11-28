@@ -537,6 +537,7 @@ class TheClassModel extends GeneralConfig
                 $idresponse = $this->dbpe->lastInsertId();  
                 if($idresponse > 0)
                 { 
+                    //var_dump("idresponse $idresponse");
                     $this->recreateIndicators($row->id);
                     $this->recreateUploads($row, $id_class, $idresponse);
                     $contInsert++;
@@ -571,9 +572,10 @@ class TheClassModel extends GeneralConfig
     private function recreateUploads($resource , $id_class, $id_resource)
     { 
         try
-        { 
+        {   
+            //var_dump("recreateUploads");
             if ( $resource->type == '4' || $resource->type == '6' || $resource->type == '7' || $resource->type == '11' ) { 
-                $ru = $this->resourcesModel->getResourseUpload($resource->id, false, true);  
+                $ru = $this->resourcesModel->getResourseUpload($resource->id, false, true);    
                 foreach ($ru as $r) {
                     $this->resourcesModel->refreshUploadBD($id_resource, $id_class, $r->name, $r->filename); 
                     if (!file_exists($this->path_upload_pecontent . $id_class . "/")) {

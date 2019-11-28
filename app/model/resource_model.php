@@ -227,8 +227,7 @@ class ResourceModel extends GeneralConfig
             else
             {
                 return $stm->fetchAll();
-            }
-            
+            } 
         }
         catch(Exception $e)
         {
@@ -735,11 +734,12 @@ class ResourceModel extends GeneralConfig
 
                     $data["id_upload_remove"] = ( isset($data["id_upload_remove"]) ) ? $data["id_upload_remove"] : false;
                     $data["id_exclude"] = ( isset($data["id_exclude"]) ) ? $data["id_exclude"] : false;
-                    $data["id_upload_remove"] = false;  
+                    //$data["id_upload_remove"] = false;  
 
                     
-                    if( isset($data["id"]) )
+                    if( isset($data["id"]) ){
                         $this->CleanResourceUpload($data["id"], $data["id_upload_remove"], $data["id_exclude"], false); 
+                    }
 
                     if( isset( $_FILES['file'] ) ){
                         $extraData = $this->uploadFiles($data, $idresponse, $code);
@@ -778,7 +778,7 @@ class ResourceModel extends GeneralConfig
     }
     
     public function InsertOrUpdateBase($data)
-    {     
+    {      
         $id_user = $this->token_data->id;
         $amb = $this->token_data->amb;
         if( $data == null ) 
@@ -903,12 +903,12 @@ class ResourceModel extends GeneralConfig
 
                 $extraData = array();
 
-                if ( $data['type'] == '4' || $data['type'] == '6' || $data['type'] == '7' || $data['type'] == '11' ) {  
+                if ( $data['type'] == '4' || $data['type'] == '6' || $data['type'] == '7' || $data['type'] == '11' ) {   
 
                     $data["id_upload_remove"] = ( isset($data["id_upload_remove"]) ) ? $data["id_upload_remove"] : false;
                     $data["id_exclude"] = ( isset($data["id_exclude"]) ) ? $data["id_exclude"] : false;
-                    $data["id_upload_remove"] = false;  
-
+                    
+                    //var_dump($data);
                     
                     if( isset($data["id"]) )
                         $this->CleanResourceUpload($data["id"], $data["id_upload_remove"], $data["id_exclude"], false); 
@@ -1005,9 +1005,9 @@ class ResourceModel extends GeneralConfig
                     //var_dump("entra 0");
 
                     $myFiles = ( !isset( $_FILES['file'] ) || $_FILES['file'] === null ) ? array() : $_FILES['file'];  
-                     
-                     /*var_dump(count($myFiles['tmp_name']));
-                     var_dump($myFiles);*/
+                    /* 
+                    var_dump(count($myFiles['tmp_name']));
+                    var_dump($myFiles);*/
 
                     $id_book = $data['id_book'];
                     $id_unity = $data['id_unity'];
@@ -1022,17 +1022,16 @@ class ResourceModel extends GeneralConfig
 
                     if (!file_exists($final_path)) {
                         mkdir($final_path, 0777, true);
-                    }  
+                    }   
 
-                    for($i = 0; $i < count($myFiles['tmp_name']); $i++ ){ 
-
-                        $tmp_name = $myFiles['tmp_name'][$i]; 
-                        $name_file = pathinfo($myFiles['name'][$i]); 
-                        $title = ( $titles == '' ) ? $name_file["filename"] : $titles[$i];
+                    if( count($myFiles['tmp_name']) === 1){
+                        $tmp_name = $myFiles['tmp_name']; 
+                        $name_file = pathinfo($myFiles['name']); 
+                        $title = ( $titles == '' ) ? $name_file["filename"] : $titles[0];
                         
                         $ext = $name_file['extension'];
                         $codeu = uniqid();
-                        $final_name = $code . '-' .  $i . $codeu . '.' . $ext;
+                        $final_name = $code . '-1' . $codeu . '.' . $ext;
                         if( move_uploaded_file( $tmp_name, $final_path . $final_name ) != false ){   
                             array_push($filesUpload, $final_name);
                             array_push($names, $title);
@@ -1040,7 +1039,25 @@ class ResourceModel extends GeneralConfig
                         } else {
                             $fullpass = false; 
                         }
-                    }   
+                    }else{
+                        for($i = 0; $i < count($myFiles['tmp_name']); $i++ ){ 
+
+                            $tmp_name = $myFiles['tmp_name'][$i]; 
+                            $name_file = pathinfo($myFiles['name'][$i]); 
+                            $title = ( $titles == '' ) ? $name_file["filename"] : $titles[$i];
+                            
+                            $ext = $name_file['extension'];
+                            $codeu = uniqid();
+                            $final_name = $code . '-' .  $i . $codeu . '.' . $ext;
+                            if( move_uploaded_file( $tmp_name, $final_path . $final_name ) != false ){   
+                                array_push($filesUpload, $final_name);
+                                array_push($names, $title);
+                                $total_upload++;
+                            } else {
+                                $fullpass = false; 
+                            }
+                        } 
+                    } 
 
                     return $this->registerUploadResources($iddb, $code, $folder, $names, $filesUpload, $data["id_upload_remove"] );
                      
@@ -1098,40 +1115,44 @@ class ResourceModel extends GeneralConfig
     {
         try 
         { 
-
             $stm = $this->dbpe->prepare("SELECT * FROM $this->table_upload WHERE id_resource = ?"); 
             $stm->execute(array($id_resource)); 
-            $dataClean = $stm->fetchAll(); 
+            $resourcesRegistered = $stm->fetchAll(); 
 
-            foreach ($dataClean as $key => $value) { 
+           /* foreach ($dataClean as $key => $value) { 
                 if(file_exists($this->path_upload_pecontent . $value->folder . '/' . $value->filename)){
                     unlink($this->path_upload_pecontent . $value->folder . '/' . $value->filename);
                 } 
-            }
+            }*/
 
-            //var_dump("pre1");
+            //var_dump($id_upload_remove);
 
-            $full = true;
+            $full = false;
  
-            if( $id_upload_remove !== false && count($id_upload_remove) > 0 ){
-                //var_dump("pre2");
+            if( $id_upload_remove !== false && count($id_upload_remove) > 0 ){ 
                 $full = false;
-                for ($i = 0; $i < count( $id_upload_remove ); $i++ ) {
-                    //var_dump("each for $i");
+                for ($i = 0; $i < count( $id_upload_remove ); $i++ ) { 
                     $id_upload = $id_upload_remove[$i];
                     $stm = $this->dbpe->prepare("DELETE FROM $this->table_upload WHERE id_resource = ? and id in (?) ");                   
                     $stm->execute(array($id_resource, $id_upload));
+                    foreach ($resourcesRegistered as $key => $file) { 
+                        if($file->id == $id_upload){
+                            unlink($this->path_upload_pecontent . $file->folder . '/' . $file->filename);
+                            /*var_dump( $this->path_upload_pecontent . $file->folder . '/' . $file->filename );
+                            var_dump( $file );*/
+                        }
+                    }
                 }
             }
 
-            if( $id_upload_exclude !== false && count($id_upload_exclude) > 0 ){
+            /*if( $id_upload_exclude !== false && count($id_upload_exclude) > 0 ){
                 $full = false;
                 for ($i = 0; $i < count( $id_upload_exclude ); $i++ ) {
                     $id_upload = $id_upload_exclude[$i];
                     $stm = $this->dbpe->prepare("DELETE FROM $this->table_upload WHERE id_resource = ? and id not in (?) ");                   
                     $stm->execute(array($id_resource, $id_upload));
                 }
-            } 
+            } */
 
             if( $full ){
                 $stm = $this->dbpe->prepare("DELETE FROM $this->table_upload WHERE id_resource = ?");   

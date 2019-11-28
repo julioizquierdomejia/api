@@ -47,6 +47,18 @@ $app->group('/grade/', function () {
         );
     }); 
 
+    $this->get('byStage/{id}', function ($req, $res, $args) {
+        $um = new GradeModel();
+        
+        return $res
+           ->withHeader('Content-type', 'application/json')
+           ->getBody()
+           ->write(
+            json_encode(
+                $um->byStage($args['id'])
+            )
+        );
+    }); 
     
     
     $this->post('save', function ($req, $res) {

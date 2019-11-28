@@ -21,7 +21,7 @@ class GradeModel extends GeneralConfig
 		{
 			$result = array();
 
-			$stm = $this->db->prepare("SELECT g.id, g.name, ss.name stage FROM $this->table g INNER JOIN $this->table_studystage ss on g.id_studystage = ss.id");
+			$stm = $this->db->prepare("SELECT g.id, g.name, ss.name stage, ss.id id_studystage FROM $this->table g INNER JOIN $this->table_studystage ss on g.id_studystage = ss.id");
 			$stm->execute();
             
 			$this->response->setResponse(true);
@@ -41,7 +41,7 @@ class GradeModel extends GeneralConfig
 		try
 		{
 			$result = array(); 
-			$stm = $this->db->prepare("SELECT * FROM $this->table WHERE id = ?");
+			$stm = $this->db->prepare("SELECT g.id, g.name, ss.name stage, ss.id id_studystage FROM $this->table g INNER JOIN $this->table_studystage ss on g.id_studystage = ss.id WHERE id = ?");
 			$stm->execute(array($id));
 
 			$this->response->setResponse(true);
@@ -61,7 +61,7 @@ class GradeModel extends GeneralConfig
         try
         {
             $result = array(); 
-            $stm = $this->db->prepare("SELECT * FROM $this->table WHERE id_studystage = ?"); 
+            $stm = $this->db->prepare("SELECT g.id, g.name, ss.name stage, ss.id id_studystage FROM $this->table g INNER JOIN $this->table_studystage ss on g.id_studystage = ss.id WHERE id_studystage = ?"); 
             $stm->execute(array($id_studystage));
 
             $this->response->setResponse(true);
