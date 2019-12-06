@@ -104,6 +104,7 @@ class TheClassModel extends GeneralConfig
 
             for($i=0; $i < count($totalAmbs); $i++)
             { 
+                //var_dump( $totalAmbs[$i] );
                 $classAmb = $this->getAllByAmbTeacher($totalAmbs[$i]->amb, $totalAmbs[$i]->id_user_link, $totalAmbs[$i]->id); 
                 foreach ($classAmb as $key => $value) { 
                     array_push($totalClass, $value);
@@ -165,29 +166,31 @@ class TheClassModel extends GeneralConfig
     public function getAllByAmbTeacher($amb, $id_user, $id_scholl = 0)
     {
         $resultUserAmb = $this->getUserByUserLink($amb, $id_user);
-
-        $resultClass = array();
         $returnData = array(); 
 
-        $this->dbpeTemp = Database::StartUpArea($amb);
-        $stm = $this->dbpeTemp->prepare("SELECT id, id_book_group, name, code, id_scholl FROM $this->table_class WHERE id_teacher = ? group by code, id_book_group");
-        $stm->execute(array($resultUserAmb->id));
-        $resultClass = $stm->fetchAll();
+        if($resultUserAmb !== false){
+            $resultClass = array(); 
 
-
-        $resultClassChildren = array();
-        foreach ($resultClass as $key => $value) {  
-            $value->amb = $amb;
             $this->dbpeTemp = Database::StartUpArea($amb);
-            $stm = $this->dbpeTemp->prepare("SELECT *, '".$amb."' amb, '".$id_scholl."' id_scholl FROM $this->table_class WHERE id_book_group = ? and code= ?"); 
-            $stm->execute(array($value->id_book_group, $value->code));
-            $resultClassChildren = $stm->fetchAll();
-            foreach ($resultClassChildren as $keyChildren => $valueChildren) {
-                $valueChildren->book = $this->getBook($valueChildren->id_book);
-            }
-            $value->books_linked = $resultClassChildren;
-            array_push($returnData, $value);
-        }  
+            $stm = $this->dbpeTemp->prepare("SELECT id, id_book_group, name, code, id_scholl FROM $this->table_class WHERE id_teacher = ? group by code, id_book_group");
+            $stm->execute(array($resultUserAmb->id));
+            $resultClass = $stm->fetchAll();
+
+            $resultClassChildren = array();
+            foreach ($resultClass as $key => $value) {  
+                $value->amb = $amb;
+                $this->dbpeTemp = Database::StartUpArea($amb);
+                $stm = $this->dbpeTemp->prepare("SELECT *, '".$amb."' amb, '".$id_scholl."' id_scholl FROM $this->table_class WHERE id_book_group = ? and code= ?"); 
+                $stm->execute(array($value->id_book_group, $value->code));
+                $resultClassChildren = $stm->fetchAll();
+                foreach ($resultClassChildren as $keyChildren => $valueChildren) {
+                    $valueChildren->book = $this->getBook($valueChildren->id_book);
+                }
+                $value->books_linked = $resultClassChildren;
+                array_push($returnData, $value);
+            }   
+        }
+
         return $returnData;
     }
 
@@ -221,7 +224,7 @@ class TheClassModel extends GeneralConfig
 
     private function getUserByUserLink($amb, $id_user_link)
     {
-        $resultUserAmb = array();  
+        $resultUserAmb = array();   
         $this->dbpeTemp = Database::StartUpArea($amb);
         $stm = $this->dbpeTemp ->prepare("SELECT id FROM $this->table_user WHERE id_user_link = ?");
         $stm->execute(array($id_user_link));

@@ -1190,8 +1190,9 @@ class ResourceModel extends GeneralConfig
             $id_teacher = $data['class']['id_teacher'];
             $class_code = $data['class']['code'];
             $class_id = $data['class']['id'];
-            $id_activity =  $data['activity']['id'];
+            $id_activity = $data['activity']['id'];
             $id_book = $data['activity']['id_book'];
+            $id_calification_type = $data['activity']['id_calification_type'];
 
             $code = uniqid();
             try 
@@ -1199,7 +1200,7 @@ class ResourceModel extends GeneralConfig
                 $code = uniqid();
                 $code = $code . '.' . $this->token_data->id;
                 $sql = "INSERT INTO $this->table_question_join
-                            (id_resource, code, id_user, code_class, id_class, times,  inserted)
+                            (id_resource, code, id_user, code_class, id_class, times, id_calification_type, inserted)
                             VALUES (?,?,?,?,?,?,?)";
                 
                 $this->dbpe->prepare($sql)
@@ -1211,6 +1212,7 @@ class ResourceModel extends GeneralConfig
                             $class_code,  
                             $class_id,
                             $data['activity']['times'],
+                            $id_calification_type,
                             date('Y-m-d G:H:i')
                         )
                 );   
@@ -1218,7 +1220,7 @@ class ResourceModel extends GeneralConfig
                 $idresponse = $this->dbpe->lastInsertId();
 
                 $dataQuestionsBD = array();
-                $arraySaveType = array('file', 'uploader', 'input', 'radio-group', 'checkbox-group', 'select', 'textarea', 'date', 'text', 'dragg');
+                $arraySaveType = array('file', 'uploader', 'input', 'radio-group', 'checkbox-group', 'select', 'textarea', 'date', 'text', 'dragg', 'number');
                 $arrayLinkType = array('file', 'uploader');
 
                 $contQD = 0;
@@ -1508,7 +1510,7 @@ class ResourceModel extends GeneralConfig
         {  
             $resultHead = array();
             $id_question = intval(substr($code, 0, strpos($code, "_") ));   
-            $stm = $this->dbpe->prepare("SELECT id_resource, code, id_user, code_class, times, score, id_score_letter, id_class, comment, date_format(date_scored, '%e/%c/%Y a las %l:%i %p') date_scored, date_format(inserted, '%e/%c/%Y a las %l:%i %p') date_resolved, status, id_calification_type  FROM $this->table_question_join WHERE id = ?"); 
+            $stm = $this->dbpe->prepare("SELECT qj.id_resource, qj.code, qj.id_user, qj.code_class, qj.times, qj.score, qj.id_score_letter, qj.id_class, qj.comment, date_format(qj.date_scored, '%e/%c/%Y a las %l:%i %p') date_scored, date_format(qj.inserted, '%e/%c/%Y a las %l:%i %p') date_resolved, qj.status, qj.id_calification_type, r.value max_score_activity  FROM $this->table_question_join qj INNER JOIN $this->table_resources r on qj.id_resource = r.id WHERE qj.id = ?"); 
             $stm->execute(array($id_question)); 
             $resultHead = $stm->fetch();  
 
@@ -1806,7 +1808,9 @@ class ResourceModel extends GeneralConfig
 
     public function uploadImagesActivity($data)
     {    
-
+        var_dump($_FILES); 
+        var_dump( json_decode($_POST['data']) );
+        var_dump( json_decode($data) );
         if($data == null)
         {
             $this->response->setResponse(false, "Error, no data");
@@ -1856,6 +1860,57 @@ class ResourceModel extends GeneralConfig
             }
         } 
     } 
+
+    public function uploadFilesActivityStudent($data){ 
+        if($data == null || $data["activity"] == null || $data["file"] == null || $data["nameField"] == null || $data["filename"] == null )
+        {
+            $this->response->setResponse(false, "Error, no data");
+            return $this->response;
+        }
+        else
+        {   
+            try 
+            {                 
+                $myFile = $data["file"];  
+                $filename = $data['filename']; 
+                $filesUpload = array(); 
+                $fullpass = true;
+                $total_upload = 0;
+                $final_path = $this->path_upload_image_activity;
+
+                if (!file_exists($final_path)) {
+                    mkdir($final_path, 0777, true);
+                } 
+  
+
+ 
+                $name_file = pathinfo($filename);
+                $ext = $name_file['extension'];
+                $codeu = uniqid();
+                $nameField = str_replace("-preview", "", $data["nameField"]);
+                $final_name = $nameField . '.' . $ext;
+
+                $base_to_php = explode(',', $myFile); 
+                $data = base64_decode($base_to_php[1]);  
+                if( file_put_contents( $final_path . $final_name ,$data) !== false ){
+                    array_push($filesUpload, $final_name); 
+                    $total_upload++;
+                } 
+                else {
+                    $fullpass = false; 
+                } 
+
+                $this->response->result = array('total_upload' => $total_upload, 'name' => $nameField );
+                $this->response->setResponse(true);
+                return $this->response; 
+
+            }
+            catch (Exception $e) 
+            {
+                $this->response->setResponse(false, $e->getMessage());
+            }
+        } 
+    }
 
     public function checkResourceHistory($id)
     {

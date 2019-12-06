@@ -470,6 +470,22 @@ $app->post('/resource/activity/question/evaluation', function ($req, $res) {
     );
 });
 
+$app->post('/resource/activity/uploadFileStudent', function ($req, $res) { 
+    $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
+    $rm = new ResourceModel($token_data); 
+
+    return $res
+       ->withHeader('Content-type', 'application/json')
+       ->getBody()
+       ->write(
+        json_encode(
+            $rm->uploadFilesActivityStudent(
+              $req->getParsedBody()
+            )
+        )
+    );
+}); 
+
 $app->post('/resource/activity/upload', function ($req, $res) { 
     $token_data = $req->getAttribute("decoded_token_data")["sub"]; 
     $rm = new ResourceModel($token_data); 
