@@ -17,7 +17,7 @@ class Database {
 			$pass = 'HCUebio810ved*';
 		}
 		
-        $pdo = new PDO('mysql:host=localhost;dbname='.$bd.';charset=utf8', $user, $pass);
+        $pdo = new PDO('mysql:host=192.168.1.90;dbname='.$bd.';charset=utf8', $user, $pass);
         
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_OBJ);
@@ -37,7 +37,7 @@ class Database {
 			$pass = 'HCUebio810ved*master';
 		}
 		
-        $pdo = new PDO('mysql:host=localhost;dbname='.$bd.';charset=utf8', $user, $pass);
+        $pdo = new PDO('mysql:host=192.168.1.90;dbname='.$bd.';charset=utf8', $user, $pass);
         
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_OBJ); 
@@ -56,7 +56,7 @@ class Database {
 			$pass = 'HCUebio810ved*master';
 		}
 		
-        $pdo = new PDO('mysql:host=localhost;dbname='.$bd.';charset=utf8', $user, $pass);
+        $pdo = new PDO('mysql:host=192.168.1.90;dbname='.$bd.';charset=utf8', $user, $pass);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_OBJ); 
         return $pdo;
@@ -84,7 +84,7 @@ class Database {
 
 		$pdo = false;
 		try {
-			$pdo = new PDO('mysql:host=localhost;dbname='.$bd.';charset=utf8', $user, $pass);
+			$pdo = new PDO('mysql:host=192.168.1.90;dbname='.$bd.';charset=utf8', $user, $pass);
 		    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_OBJ); 			
 		} catch (Exception $e) {
@@ -105,7 +105,7 @@ class Database {
 			$pass = 'HCUebio810ved*master';
 		}
 		
-        $pdo = new PDO('mysql:host=localhost;dbname='.$bd.';charset=utf8', $user, $pass);
+        $pdo = new PDO('mysql:host=192.168.1.90;dbname='.$bd.';charset=utf8', $user, $pass);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_OBJ); 
         return $pdo;

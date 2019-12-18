@@ -119,6 +119,8 @@ class UserModel extends GeneralConfig
             $stm->execute(array($id_user, $class_code));
             $result = $stm->fetch();
 
+            var_dump( "SELECT uc.code_class, uc.id_class, '1' joined FROM $this->table u inner join $this->table_user_class uc on u.id = uc.id_user where u.id = '$id_user' and uc.code_class = '$class_code' ");
+
             if( count($result) > 0)
             {
                 $this->response->setResponse(true); 
